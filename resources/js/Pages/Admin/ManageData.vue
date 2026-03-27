@@ -3,6 +3,10 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 // import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+
 
 const props = defineProps({
     faculties:   { type: Array, default: () => [] },
@@ -84,6 +88,16 @@ const levels = [
                     </p>
                 </div>
             </div>
+
+            <div v-if="page.props.flash.success" class="mb-4 rounded-lg bg-green-100 px-4 py-3 text-green-700">
+                {{ page.props.flash.success }}
+            </div>
+
+            <div v-if="page.props.flash.error" class="mb-4 rounded-lg bg-red-100 px-4 py-3 text-red-700">
+                {{ page.props.flash.error }}
+            </div>
+
+
 
             <!-- Tabs -->
             <div class="border-b border-gray-200 mb-6">
