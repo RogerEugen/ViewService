@@ -44,10 +44,16 @@ Route::middleware('auth.session','student')->group(function () {
 
 });
 
-Route::middleware('auth.session','admin')->group(function () {
-    Route::get('/admin/ManageData', [AdminController::class, 'ManageData'])->name('admin.ManageData');
-});
+// Admin routes
+Route::middleware(['auth.session', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard',   [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/ManageData',  [AdminController::class, 'ManageData'])->name('admin.ManageData');
 
+    // Proxy to Auth Service
+    Route::post('/faculties',           [AdminController::class, 'storeFaculty'])->name('admin.faculties.store');
+    Route::post('/departments',         [AdminController::class, 'storeDepartment'])->name('admin.departments.store');
+    Route::post('/programs',            [AdminController::class, 'storeProgram'])->name('admin.programs.store');
+});
 
 
 Route::middleware('auth')->group(function () {
