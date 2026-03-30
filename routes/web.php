@@ -6,6 +6,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Register\RegistrarController;
 use App\Http\Controllers\Student\StudentController;
 
 Route::get('/', function () {
@@ -48,13 +49,16 @@ Route::middleware('auth.session','student')->group(function () {
 Route::middleware(['auth.session', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard',   [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/ManageData',  [AdminController::class, 'ManageData'])->name('admin.ManageData');
-
     // Proxy to Auth Service
     Route::post('/faculties',           [AdminController::class, 'storeFaculty'])->name('admin.faculties.store');
     Route::post('/departments',         [AdminController::class, 'storeDepartment'])->name('admin.departments.store');
     Route::post('/programs',            [AdminController::class, 'storeProgram'])->name('admin.programs.store');
 });
 
+//registrar routes
+Route::middleware('auth.session','registrar')->group(function () {
+    Route::get('/registrar/ManageUser', [RegistrarController::class, 'ManageUser'])->name('registrar.ManageUser');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
