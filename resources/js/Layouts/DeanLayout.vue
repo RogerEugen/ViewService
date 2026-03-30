@@ -179,7 +179,7 @@ const showingNavigationDropdown = ref(false);
                 </div>
             </nav>
 
-           dean. <!-- Page Heading -->
+           <!-- Page Heading -->
             <header
                 class="bg-white shadow"
                 v-if="$slots.header"

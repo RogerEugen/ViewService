@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -16,8 +17,7 @@ class AuthenticatedSessionController extends Controller
     // ─────────────────────────────────────────────
     public function create(): Response|RedirectResponse
     {
-        // If already logged in redirect to their dashboard
-        if (session()->has('jwt_token')) {
+        if (session()->has('jwt_token') && !session('must_change_password')) {
             return redirect($this->dashboardRoute(session('user_role')));
         }
 
@@ -27,11 +27,10 @@ class AuthenticatedSessionController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // HANDLE LOGIN FORM SUBMISSION
+    // LOGIN
     // ─────────────────────────────────────────────
     public function store(Request $request): RedirectResponse
     {
-        // 1. Validate input locally first
         $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
@@ -41,16 +40,14 @@ class AuthenticatedSessionController extends Controller
             'password.required' => 'Password is required.',
         ]);
 
-        // 2. Call Auth Service API
         try {
-            $response = Http::timeout(10)
-                ->post(
-                    config('services.auth_service.url') . '/api/auth/login',
-                    [
-                        'email'    => $request->email,
-                        'password' => $request->password,
-                    ]
-                );
+            $response = Http::timeout(10)->post(
+                config('services.auth_service.url') . '/api/auth/login',
+                [
+                    'email'    => $request->email,
+                    'password' => $request->password,
+                ]
+            );
         } catch (\Exception $e) {
             return back()->withErrors([
                 'email' => 'Auth service is unavailable. Please try again later.',
@@ -59,71 +56,68 @@ class AuthenticatedSessionController extends Controller
 
         $data = $response->json();
 
-        // 3. Handle failed login
-        if (!$response->successful()) {
-            return back()->withErrors([
-                'email' => $data['message'] ?? 'Invalid credentials.',
-            ])->withInput($request->only('email'));
-        }
-
-        // 4. Handle account deactivated (403)
         if ($response->status() === 403) {
             return back()->withErrors([
                 'email' => $data['message'] ?? 'Your account has been deactivated.',
             ])->withInput($request->only('email'));
         }
 
-        // 5. Handle first login — must change password
+        if (!$response->successful()) {
+            return back()->withErrors([
+                'email' => $data['message'] ?? 'Invalid credentials.',
+            ])->withInput($request->only('email'));
+        }
+
+        // First login — must change password
         if (!empty($data['must_change_password'])) {
-            // Store JWT only — no anon token yet until password is changed
+            session()->flush();
             session([
                 'jwt_token'            => $data['jwt'],
                 'must_change_password' => true,
-                'user'                 => $data['user'],
                 'user_role'            => $data['user']['role'],
-                'token_issued_at'      => now()->timestamp,   // ✅ ADD THIS
-                'expires_in'           => 1800,               // ✅ ADD THIS
+                'user_name'            => $data['user']['name'],
+                'user'                 => $data['user'],
+                'token_issued_at'      => now()->timestamp,
+                'expires_in'           => 1800,
             ]);
-
             return redirect()->route('password.change');
         }
 
-        // 6. Successful login — store everything in session
-        $request->session()->regenerate();
+        // Normal login
+        $this->storeFullSession($request, $data);
 
-        session([
-            'jwt_token'       => $data['jwt'],
-            'anonymous_token' => $data['anonymous_token'],
-            'expires_in'      => $data['expires_in'],
-            'token_issued_at' => now()->timestamp,
-            'user'            => $data['user'],
-            'user_role'       => $data['user']['role'],
-            'user_name'       => $data['user']['name'],
-            'user_email'      => $data['user']['email'],
-            'department_id'   => $data['user']['department_id'],
-        ]);
-
-        // 7. Redirect to correct dashboard by role
-        return redirect()->intended(
-            $this->dashboardRoute($data['user']['role'])
-        );
+        return redirect()->intended($this->dashboardRoute($data['user']['role']));
     }
 
     // ─────────────────────────────────────────────
-    // HANDLE CHANGE PASSWORD (first login)
+    // SHOW CHANGE PASSWORD PAGE
     // ─────────────────────────────────────────────
-    public function showChangePassword(): Response |RedirectResponse
+    public function showChangePassword(): Response|RedirectResponse
     {
-        // Guard — only accessible if must_change_password is set
         if (!session('must_change_password')) {
             return redirect()->route('login');
         }
 
-        return Inertia::render('Auth/ChangePassword');
+        return Inertia::render('Auth/ChangePassword', [
+            'userName' => session('user_name'),
+            'userRole' => session('user_role'),
+        ]);
     }
 
+    // ─────────────────────────────────────────────
+    // SUBMIT NEW PASSWORD
+    // ─────────────────────────────────────────────
     public function updatePassword(Request $request): RedirectResponse
     {
+        // Handle cancel — skip password change and logout
+        if ($request->has('cancel')) {
+            session()->flush();
+            session()->invalidate();
+            session()->regenerateToken();
+            return redirect()->route('login')
+                ->with('status', 'Password change cancelled. Please login again.');
+        }
+
         $request->validate([
             'current_password'          => ['required', 'string'],
             'new_password'              => [
@@ -138,13 +132,19 @@ class AuthenticatedSessionController extends Controller
         ], [
             'new_password.min'       => 'Password must be at least 8 characters.',
             'new_password.confirmed' => 'Passwords do not match.',
-            'new_password.regex'     => 'Password must have at least one uppercase letter and one number.',
+            'new_password.regex'     => 'Password must contain at least one uppercase letter and one number.',
         ]);
 
-        // Call Auth Service change password endpoint
+        $jwtToken = session('jwt_token');
+
+        if (!$jwtToken) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Session expired. Please login again.']);
+        }
+
         try {
             $response = Http::timeout(10)
-                ->withToken(session('jwt_token'))
+                ->withToken($jwtToken)
                 ->post(
                     config('services.auth_service.url') . '/api/auth/change-password',
                     [
@@ -161,26 +161,17 @@ class AuthenticatedSessionController extends Controller
 
         $data = $response->json();
 
+        // Failed response from Auth Service
         if (!$response->successful()) {
             return back()->withErrors([
                 'current_password' => $data['message'] ?? 'Password change failed.',
             ]);
         }
 
-        // Password changed — now we have the anonymous token
-        // Update session with anonymous token and clear the force flag
-        $request->session()->regenerate();
+        // ✅ Success — fully rebuild session
+        $this->storeFullSession($request, $data);
 
-        session([
-            'anonymous_token'      => $data['anonymous_token'],
-            'expires_in'           => $data['expires_in'],
-            'token_issued_at'      => now()->timestamp,
-            'must_change_password' => false,
-        ]);
-
-        return redirect()->intended(
-            $this->dashboardRoute(session('user_role'))
-        );
+        return redirect()->intended($this->dashboardRoute($data['user']['role']));
     }
 
     // ─────────────────────────────────────────────
@@ -188,21 +179,17 @@ class AuthenticatedSessionController extends Controller
     // ─────────────────────────────────────────────
     public function destroy(Request $request): RedirectResponse
     {
-        // Tell Auth Service to invalidate the JWT
         if (session()->has('jwt_token')) {
             try {
                 Http::timeout(5)
                     ->withToken(session('jwt_token'))
-                    ->post(
-                        config('services.auth_service.url') . '/api/auth/logout'
-                    );
+                    ->post(config('services.auth_service.url') . '/api/auth/logout');
             } catch (\Exception $e) {
-                // Even if auth service is down — still clear local session
+                // Still clear local session even if API call fails
             }
         }
 
-        // Clear everything from session
-        $request->session()->flush();
+        session()->flush();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -210,7 +197,29 @@ class AuthenticatedSessionController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // PRIVATE HELPER — map role to dashboard route
+    // PRIVATE — store full session after login or password change
+    // ─────────────────────────────────────────────
+    private function storeFullSession(Request $request, array $data): void
+    {
+        session()->flush();
+        $request->session()->regenerate();
+
+        session([
+            'jwt_token'            => $data['jwt'],
+            'anonymous_token'      => $data['anonymous_token'],
+            'expires_in'           => $data['expires_in'],
+            'token_issued_at'      => now()->timestamp,
+            'must_change_password' => false,
+            'user'                 => $data['user'],
+            'user_role'            => $data['user']['role'],
+            'user_name'            => $data['user']['name'],
+            'user_email'           => $data['user']['email'],
+            'department_id'        => $data['user']['department_id'] ?? null,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────
+    // PRIVATE — role to dashboard route
     // ─────────────────────────────────────────────
     private function dashboardRoute(string $role): string
     {
@@ -222,7 +231,7 @@ class AuthenticatedSessionController extends Controller
             'rector'    => route('rector.dashboard'),
             'registrar' => route('registrar.dashboard'),
             'admin'     => route('admin.dashboard'),
-            default     => '/',
+            default     => route('login'),
         };
     }
 }

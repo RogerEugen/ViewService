@@ -6,7 +6,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Register\RegistrarController;
+use App\Http\Controllers\Registrar\RegistrarController;
 use App\Http\Controllers\Student\StudentController;
 
 Route::get('/', function () {
@@ -56,8 +56,11 @@ Route::middleware(['auth.session', 'admin'])->prefix('admin')->group(function ()
 });
 
 //registrar routes
-Route::middleware('auth.session','registrar')->group(function () {
+Route::middleware(['auth.session', 'registrar'])->group(function () {
+    Route::get('/registrar/dashboard',  [RegistrarController::class, 'dashboard'])->name('registrar.dashboard');
     Route::get('/registrar/ManageUser', [RegistrarController::class, 'ManageUser'])->name('registrar.ManageUser');
+    Route::post('/registrar/import/students', [RegistrarController::class, 'importStudents'])->name('registrar.import.students');
+    Route::post('/registrar/import/staff',    [RegistrarController::class, 'importStaff'])->name('registrar.import.staff');
 });
 
 Route::middleware('auth')->group(function () {
