@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth.session' => \App\Http\Middleware\CheckSessionAuth::class,
             'student'=> \App\Http\Middleware\StudentMiddleware::class,
+            'lecture'=> \App\Http\Middleware\LectureMiddleware::class,
             'hod'=> \App\Http\Middleware\HodMiddleware::class,
             'dean'=> \App\Http\Middleware\DeanMiddleware::class,
             'rector'=> \App\Http\Middleware\RectorMiddleware::class,

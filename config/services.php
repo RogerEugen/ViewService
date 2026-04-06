@@ -35,11 +35,13 @@ return [
         ],
     ],
 
-    // 'backend' => [
-    //     'url' => env('BACKEND_URL', 'http://localhost:8001'), //hapa ndipo link ya backend iko nikitaka kutumia kitu kutoka backend naita hii bro
-    // ],
+
     'auth_service' => [
         'url' => env('AUTH_SERVICE_URL', 'http://localhost:8001'),
+    ],
+
+    'feedback_service' => [
+        'url' => env('FEEDBACK_SERVICE_URL', 'http://localhost:8002'),
     ],
 
 

@@ -39,6 +39,12 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Dashboard
                                 </NavLink>
+                                <NavLink
+                                    :href="route('lecture.FeedBack')"
+                                    :active="route().current('lecture.FeedBack')"
+                                >
+                                    FeedBack
+                                </NavLink>
                             </div>
                         </div>
 

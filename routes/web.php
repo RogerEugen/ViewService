@@ -8,6 +8,8 @@ use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Registrar\RegistrarController;
 use App\Http\Controllers\Student\StudentController;
+use App\Http\Controllers\Lecture\LectureController;
+use Termwind\Components\Li;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -40,9 +42,21 @@ Route::middleware('auth.session')->group(function () {
     Route::get('/admin/dashboard',     fn() => Inertia::render('Admin/Dashboard'))->name('admin.dashboard');
 });
 
-Route::middleware('auth.session','student')->group(function () {
-    Route::get('/student/myinfo', [StudentController::class, 'MyInfo'])->name('student.Myinfo');
+// Student routes
+Route::middleware(['auth.session', 'student'])->group(function () {
+    Route::get('/student/dashboard',  fn() => Inertia::render('Student/Dashboard'))->name('student.dashboard');
+    Route::get('/student/myinfo',     [StudentController::class, 'MyInfo'])->name('student.Myinfo');
+    Route::get('/student/feedback',   [StudentController::class, 'FeedBack'])->name('student.FeedBack');
+    Route::post('/student/feedback',  [StudentController::class, 'submitFeedback'])->name('student.feedback.submit');
+    Route::get('/student/track',      [StudentController::class, 'trackFeedback'])->name('student.feedback.track');
+     Route::post('/student/followup',  [StudentController::class, 'sendFollowup'])->name('student.feedback.followup');
+});
 
+// Lecturer routes
+Route::middleware(['auth.session', 'lecture'])->group(function () {
+    Route::get('/lecturer/dashboard',  fn() => Inertia::render('Lecture/Dashboard'))->name('lecturer.dashboard');
+    Route::get('/lecturer/feedback',   [LectureController::class, 'FeedBack'])->name('lecture.FeedBack');
+    Route::post('/lecturer/feedback',  [LectureController::class, 'submitFeedback'])->name('lecture.feedback.submit');
 });
 
 // Admin routes
