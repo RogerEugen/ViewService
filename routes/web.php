@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Registrar\RegistrarController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Lecture\LectureController;
+use App\Http\Controllers\Hod\HodController;
 use Termwind\Components\Li;
 
 Route::get('/', function () {
@@ -57,6 +58,8 @@ Route::middleware(['auth.session', 'lecture'])->group(function () {
     Route::get('/lecturer/dashboard',  fn() => Inertia::render('Lecture/Dashboard'))->name('lecturer.dashboard');
     Route::get('/lecturer/feedback',   [LectureController::class, 'FeedBack'])->name('lecture.FeedBack');
     Route::post('/lecturer/feedback',  [LectureController::class, 'submitFeedback'])->name('lecture.feedback.submit');
+    Route::get('/lecturer/track',      [LectureController::class, 'trackFeedback'])->name('lecture.feedback.track');
+    Route::post('/lecturer/followup',  [LectureController::class, 'sendFollowup'])->name('lecture.feedback.followup');
 });
 
 // Admin routes
@@ -75,6 +78,15 @@ Route::middleware(['auth.session', 'registrar'])->group(function () {
     Route::get('/registrar/ManageUser', [RegistrarController::class, 'ManageUser'])->name('registrar.ManageUser');
     Route::post('/registrar/import/students', [RegistrarController::class, 'importStudents'])->name('registrar.import.students');
     Route::post('/registrar/import/staff',    [RegistrarController::class, 'importStaff'])->name('registrar.import.staff');
+});
+
+Route::middleware(['auth.session', 'hod'])->group(function () {
+    Route::get('/hod/dashboard',             [HodController::class, 'dashboard'])->name('hod.dashboard');
+    Route::get('/hod/feedbacks',             [HodController::class, 'feedbacks'])->name('hod.feedbacks');
+    Route::get('/hod/feedbacks/{id}',        [HodController::class, 'show'])->name('hod.feedbacks.show');
+    Route::post('/hod/feedbacks/{id}/respond',  [HodController::class, 'respond'])->name('hod.feedbacks.respond');
+    Route::post('/hod/feedbacks/{id}/escalate', [HodController::class, 'escalate'])->name('hod.feedbacks.escalate');
+    Route::post('/hod/feedbacks/{id}/resolve',  [HodController::class, 'resolve'])->name('hod.feedbacks.resolve');
 });
 
 Route::middleware('auth')->group(function () {

@@ -101,12 +101,19 @@ class StudentController extends Controller
         if ($code) {
             try {
                 $response = Http::timeout(5)
-                    ->get($this->feedbackApiUrl('feedback/track/' . $code));
+                    ->get($this->feedbackApiUrl('feedback/track/' . $code), [
+                        'sender_role' => 'student', // ✅ pass role for ownership check
+                    ]);
 
                 if ($response->successful()) {
                     $feedback = $response->json('feedback');
                 } else {
-                    $error = $response->json('message', 'Tracking code not found.');
+                    $data  = $response->json();
+                    $error = match ($data['reason'] ?? '') {
+                        'role_mismatch'  => 'This tracking code was not submitted by a student.',
+                        'route_mismatch' => 'This tracking code does not match your role.',
+                        default          => $data['message'] ?? 'Tracking code not found.',
+                    };
                 }
             } catch (\Exception $e) {
                 $error = 'Tracking service unavailable.';
@@ -130,16 +137,20 @@ class StudentController extends Controller
         try {
             $response = Http::timeout(10)
                 ->post($this->feedbackApiUrl('feedback/followup'), [
-                    'tracking_code' => $request->tracking_code,
-                    'message'       => $request->message,
-                    'direction'     => 'sender_to_recipient',
+                    'tracking_code'        => $request->tracking_code,
+                    'message'              => $request->message,
+                    'direction'            => 'sender_to_recipient',
+                    'sender_role'          => 'student',
+                    'sender_department_id' => session('department_id'), // ✅ dept check
                 ]);
         } catch (\Exception $e) {
             return back()->withErrors(['message' => 'Service unavailable.']);
         }
 
         if (!$response->successful()) {
-            return back()->withErrors(['message' => 'Failed to send follow-up.']);
+            return back()->withErrors([
+                'message' => $response->json('message', 'Failed to send follow-up.'),
+            ]);
         }
 
         return back()->with('followup_success', true);
