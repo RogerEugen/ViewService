@@ -1,4 +1,12 @@
 <script setup>
+
+import {
+    HomeIcon,
+    UserIcon,
+    ChatBubbleLeftRightIcon,
+    DocumentTextIcon
+} from '@heroicons/vue/24/outline';
+
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -33,30 +41,33 @@ const showingNavigationDropdown = ref(false);
                             <div
                                 class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
                             >
-                                <NavLink
-                                    :href="route('student.dashboard')"
-                                    :active="route().current('student.dashboard')"
-                                >
-                                    Dashboard
+                                <NavLink :href="route('student.dashboard')"
+                                    :active="route().current('student.dashboard')">
+                                    <div class="flex items-center gap-2">
+                                        <HomeIcon class="w-5 h-5" />
+                                        Dashboard
+                                    </div>
                                 </NavLink>
 
-                                <NavLink
-                                    :href="route('student.Myinfo')"
-                                    :active="route().current('student.Myinfo')"
-                                >
-                                    My info
+                                <NavLink :href="route('student.Myinfo')" :active="route().current('student.Myinfo')">
+                                    <div class="flex items-center gap-2">
+                                        <UserIcon class="w-5 h-5" />
+                                        My info
+                                    </div>
                                 </NavLink>
-                                <NavLink
-                                    :href="route('student.FeedBack')"
-                                    :active="route().current('student.FeedBack')"
-                                >
-                                    FeedBack
+                                <NavLink :href="route('student.FeedBack')"
+                                    :active="route().current('student.FeedBack')">
+                                    <div class="flex items-center gap-2">
+                                        <ChatBubbleLeftRightIcon class="w-5 h-5" />
+                                        FeedBack
+                                    </div>
                                 </NavLink>
-                                <NavLink
-                                    :href="route('student.feedback.track')"
-                                    :active="route().current('student.feedback.track')"
-                                >
-                                    My Submission
+                                <NavLink :href="route('student.feedback.track')"
+                                    :active="route().current('student.feedback.track')">
+                                    <div class="flex items-center gap-2">
+                                        <DocumentTextIcon class="w-5 h-5" />
+                                        My Submission
+                                    </div>
                                 </NavLink>
                             </div>
                         </div>
