@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
 
             'flash' => [
                 'success' => session('success'),
+                 'tracking_code' => $request->session()->get('tracking_code'),
                 'error'   => session('error'),
             ],
         ]);
