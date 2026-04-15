@@ -39,6 +39,14 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Dashboard
                                 </NavLink>
+
+                                <NavLink
+                                    :href="route('rector.feedbacks')"
+                                    :active="route().current('rector.feedbacks')"
+                                >
+                                    Feedbacks
+                                </NavLink>
+
                             </div>
                         </div>
 

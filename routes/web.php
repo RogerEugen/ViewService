@@ -12,6 +12,7 @@ use App\Http\Controllers\Lecture\LectureController;
 use App\Http\Controllers\Hod\HodController;
 use Termwind\Components\Li;
 use App\Http\Controllers\Dean\DeanController;
+use App\Http\Controllers\Rector\RectorController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -97,6 +98,14 @@ Route::middleware(['auth.session', 'dean'])->group(function () {
     Route::post('/dean/feedbacks/{id}/respond',   [DeanController::class, 'respond'])->name('dean.feedbacks.respond');
     Route::post('/dean/feedbacks/{id}/escalate',  [DeanController::class, 'escalate'])->name('dean.feedbacks.escalate');
     Route::post('/dean/feedbacks/{id}/resolve',   [DeanController::class, 'resolve'])->name('dean.feedbacks.resolve');
+});
+
+Route::middleware(['auth.session', 'rector'])->group(function () {
+    Route::get('/rector/dashboard',              [RectorController::class, 'dashboard'])->name('rector.dashboard');
+    Route::get('/rector/feedbacks',              [RectorController::class, 'feedbacks'])->name('rector.feedbacks');
+    Route::get('/rector/feedbacks/{id}',         [RectorController::class, 'show'])->name('rector.feedbacks.show');
+    Route::post('/rector/feedbacks/{id}/respond',[RectorController::class, 'respond'])->name('rector.feedbacks.respond');
+    Route::post('/rector/feedbacks/{id}/resolve',[RectorController::class, 'resolve'])->name('rector.feedbacks.resolve');
 });
 
 Route::middleware('auth')->group(function () {
