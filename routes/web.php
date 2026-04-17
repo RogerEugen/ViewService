@@ -66,12 +66,16 @@ Route::middleware(['auth.session', 'lecture'])->group(function () {
 
 // Admin routes
 Route::middleware(['auth.session', 'admin'])->prefix('admin')->group(function () {
-    Route::get('/dashboard',   [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/ManageData',  [AdminController::class, 'ManageData'])->name('admin.ManageData');
-    // Proxy to Auth Service
-    Route::post('/faculties',           [AdminController::class, 'storeFaculty'])->name('admin.faculties.store');
-    Route::post('/departments',         [AdminController::class, 'storeDepartment'])->name('admin.departments.store');
-    Route::post('/programs',            [AdminController::class, 'storeProgram'])->name('admin.programs.store');
+    Route::get('/dashboard',                       [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/ManageData',                      [AdminController::class, 'ManageData'])->name('admin.ManageData');
+    Route::get('/feedbacks',                       [AdminController::class, 'feedbacks'])->name('admin.feedbacks');
+    Route::get('/feedbacks/{id}',                  [AdminController::class, 'showFeedback'])->name('admin.feedbacks.show');
+    Route::post('/feedbacks/{id}/respond',         [AdminController::class, 'respondFeedback'])->name('admin.feedbacks.respond');
+    Route::post('/feedbacks/{id}/resolve',         [AdminController::class, 'resolveFeedback'])->name('admin.feedbacks.resolve');
+    // Data management
+    Route::post('/faculties',                      [AdminController::class, 'storeFaculty'])->name('admin.faculties.store');
+    Route::post('/departments',                    [AdminController::class, 'storeDepartment'])->name('admin.departments.store');
+    Route::post('/programs',                       [AdminController::class, 'storeProgram'])->name('admin.programs.store');
 });
 
 //registrar routes
