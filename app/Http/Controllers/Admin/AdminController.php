@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -205,9 +206,13 @@ class AdminController extends Controller
             'name'           => ['required', 'string', 'max:150'],
             'code'           => ['required', 'string', 'max:20'],
             'department_id'  => ['required', 'integer'],
-            'level'          => ['required', 'in:certificate,diploma,degree,masters,phd'],
+            // 'level'          => ['required', 'in:certificate,diploma,degree,masters,phd'],
+            'level' => ['required', 'in:basic_certificate,certificate,diploma,higher_diploma,postgraduate_diploma,bachelors,masters,phd'],
             'duration_years' => ['required', 'numeric', 'min:1', 'max:7'],
         ]);
+
+        $durationYears   = $request->duration_years;
+        $durationDisplay = $durationYears . ' year' . ($durationYears > 1 ? 's' : '');
 
         try {
             $response = Http::withHeaders($this->authHeaders())
@@ -215,25 +220,32 @@ class AdminController extends Controller
                 ->post($this->apiUrl('programs'), [
                     'name'             => $request->name,
                     'code'             => strtoupper($request->code),
-                    'department_id'    => $request->department_id,
-                    'level'            => $request->level,
-                    'duration_years'   => $request->duration_years,
-                    'duration_display' => $request->duration_years . ' year' . ($request->duration_years > 1 ? 's' : ''),
+                    'department_id'    => (int) $request->department_id,
+                    'level'            => strtolower($request->level), // always lowercase
+                    'duration_years'   => (float) $durationYears,
+                    'duration_display' => $durationDisplay,            //  always send this
+                    'is_active'        => true,
                 ]);
         } catch (\Exception $e) {
-            return back()->withErrors(['name' => 'Auth service unavailable.'])->withInput();
+            return back()->withErrors(['name' => 'Auth service unavailable: ' . $e->getMessage()])->withInput();
         }
 
+        $data = $response->json();
+
         if (!$response->successful()) {
-            return back()
-                ->withErrors($response->json('errors', ['name' => $response->json('message', 'Failed to create program.')]))
-                ->withInput();
+            //  Show the actual validation errors from Auth Service
+            $errors = $data['errors'] ?? [];
+            if (!empty($errors)) {
+                return back()->withErrors($errors)->withInput();
+            }
+            return back()->withErrors([
+                'name' => $data['message'] ?? 'Failed to create program. Status: ' . $response->status(),
+            ])->withInput();
         }
 
         return redirect()->route('admin.ManageData')
-            ->with('success', 'Program created successfully.');
+            ->with('success', 'Program "' . $request->name . '" created successfully.');
     }
-
     // ─────────────────────────────────────────────
     // FEEDBACKS — routed to admin only
     // ─────────────────────────────────────────────
@@ -323,5 +335,171 @@ class AdminController extends Controller
         }
 
         return back()->with('success', 'Feedback resolved successfully.');
+    }
+
+
+    // ── Evaluation Windows ─────────────────────────────────────────
+    public function evaluationWindows(): Response
+    {
+        try {
+            $response = Http::timeout(5)
+                ->get($this->feedbackApiUrl('evaluation-windows'));
+            $windows = $response->successful() ? $response->json('windows', []) : [];
+        } catch (\Exception $e) {
+            $windows = [];
+        }
+
+        return Inertia::render('Admin/EvaluationWindows', [
+            'windows' => $windows,
+            'user'    => session('user'),
+        ]);
+    }
+
+    public function storeEvaluationWindow(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'title'         => ['required', 'string'],
+            'academic_year' => ['required', 'regex:/^\d{4}\/\d{4}$/'],
+            'semester'      => ['required', 'integer', 'in:1,2'],
+            'opens_at'      => ['required', 'date'],
+            'closes_at'     => ['required', 'date', 'after:opens_at'],
+        ]);
+
+        try {
+            $response = Http::timeout(10)
+                ->post($this->feedbackApiUrl('evaluation-windows'), [
+                    'title'         => $request->title,
+                    'academic_year' => $request->academic_year,
+                    'semester'      => (int) $request->semester,
+                    'opens_at'      => $request->opens_at,
+                    'closes_at'     => $request->closes_at,
+                    'is_active'     => true,
+                ]);
+        } catch (\Exception $e) {
+            return back()->withErrors(['title' => 'Service unavailable.']);
+        }
+
+        if (!$response->successful()) {
+            return back()->withErrors($response->json('errors', [
+                'title' => $response->json('message', 'Failed to create window.')
+            ]));
+        }
+
+        return back()->with('success', 'Evaluation window created successfully.');
+    }
+
+    public function toggleEvaluationWindow(int $id): RedirectResponse
+    {
+        try {
+            Http::timeout(10)->post($this->feedbackApiUrl("evaluation-windows/{$id}/toggle"));
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Service unavailable.']);
+        }
+
+        return back()->with('success', 'Window status updated.');
+    }
+
+    public function deleteEvaluationWindow(int $id): RedirectResponse
+    {
+        try {
+            $response = Http::timeout(10)
+                ->delete($this->feedbackApiUrl("evaluation-windows/{$id}"));
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Service unavailable.']);
+        }
+
+        if (!$response->successful()) {
+            return back()->withErrors(['error' => $response->json('message', 'Cannot delete this window.')]);
+        }
+
+        return back()->with('success', 'Window deleted.');
+    }
+
+    // ── Get departments with HOD info ──────────────────────────────
+    public function getDepartmentsWithHod(): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(5)
+                ->get($this->apiUrl('departments'));
+
+            $departments = $response->successful()
+                ? $response->json('departments', [])
+                : [];
+        } catch (\Exception $e) {
+            $departments = [];
+        }
+
+        return response()->json(['departments' => $departments]);
+    }
+
+    // ── Create HOD for department ──────────────────────────────────
+    public function storeHod(Request $request, int $departmentId): RedirectResponse
+    {
+        $request->validate([
+            'first_name'     => ['required', 'string', 'max:100'],
+            'last_name'      => ['required', 'string', 'max:100'],
+            'email'          => ['required', 'email'],
+            'phone'          => ['nullable', 'string'],
+            'staff_number'   => ['nullable', 'string'],
+            'title'          => ['nullable', 'string'],
+            'gender'         => ['nullable', 'in:Male,Female,Other'],
+            'specialization' => ['nullable', 'string'],
+            'action'         => ['required', 'in:assign,replace'],
+        ]);
+
+        $endpoint = $request->action === 'replace'
+            ? "departments/{$departmentId}/replace-hod"
+            : "departments/{$departmentId}/assign-hod";
+
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->post($this->apiUrl($endpoint), [
+                    'first_name'     => $request->first_name,
+                    'last_name'      => $request->last_name,
+                    'email'          => $request->email,
+                    'phone'          => $request->phone,
+                    'staff_number'   => $request->staff_number,
+                    'title'          => $request->title,
+                    'gender'         => $request->gender,
+                    'specialization' => $request->specialization,
+                ]);
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'first_name' => 'Auth service unavailable: ' . $e->getMessage(),
+            ])->withInput();
+        }
+
+        $data = $response->json();
+
+        Log::info('HOD creation response', [
+            'status' => $response->status(),
+            'body'   => $data,
+        ]);
+
+        if (!$response->successful()) {
+            // ✅ Show the actual errors from Auth Service
+            $errors = $data['errors'] ?? [];
+
+            if (!empty($errors)) {
+                // Map auth service errors to form fields
+                $formErrors = [];
+                foreach ($errors as $field => $messages) {
+                    $formErrors[$field] = is_array($messages) ? $messages[0] : $messages;
+                }
+                return back()->withErrors($formErrors)->withInput();
+            }
+
+            return back()->withErrors([
+                'first_name' => $data['message'] ?? 'Failed to create HOD. HTTP: ' . $response->status(),
+            ])->withInput();
+        }
+
+        $hodName  = $data['hod']['name'] ?? 'HOD';
+        $tempPass = $data['hod']['temp_password'] ?? $request->last_name;
+
+        return redirect()->route('admin.ManageData')
+            ->with('success', "HOD '{$hodName}' created. Login: {$request->email} / Password: {$tempPass}");
     }
 }

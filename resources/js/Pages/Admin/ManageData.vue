@@ -1,6 +1,6 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -13,9 +13,8 @@ const props = defineProps({
 const page  = usePage();
 const flash = computed(() => page.props.flash ?? {});
 
-// Tab from URL query
-const urlParams  = new URLSearchParams(window.location.search);
-const activeTab  = ref(urlParams.get('tab') ?? 'faculties');
+const urlParams = new URLSearchParams(window.location.search);
+const activeTab = ref(urlParams.get('tab') ?? 'faculties');
 
 // ── Forms ─────────────────────────────────────────────────────
 const facultyForm = useForm({ name: '', code: '' });
@@ -25,6 +24,46 @@ const programForm = useForm({
     level: 'degree', duration_years: 3,
 });
 
+// ── HOD form ──────────────────────────────────────────────────
+const hodForm = useForm({
+    first_name:    '',
+    last_name:     '',
+    email:         '',
+    phone:         '',
+    staff_number:  '',
+    title:         'Dr',
+    gender:        'Male',
+    specialization:'',
+    action:        'assign',
+});
+
+const selectedDept    = ref(null);
+const showHodModal    = ref(false);
+const showSuccess     = ref(false);
+const createdHodInfo  = ref(null);
+
+const openHodModal = (dept, action = 'assign') => {
+    selectedDept.value  = dept;
+    hodForm.action      = action;
+    hodForm.specialization = dept.name;
+    showHodModal.value  = true;
+};
+
+const closeHodModal = () => {
+    showHodModal.value = false;
+    selectedDept.value = null;
+    hodForm.reset();
+};
+
+const submitHod = () => {
+    hodForm.post(route('admin.departments.hod.store', selectedDept.value.id), {
+        onSuccess: () => {
+            closeHodModal();
+        },
+    });
+};
+
+// ── Submit helpers ────────────────────────────────────────────
 const submitFaculty = () => {
     facultyForm.post(route('admin.faculties.store'), {
         onSuccess: () => facultyForm.reset(),
@@ -43,15 +82,15 @@ const submitProgram = () => {
     });
 };
 
-// Helpers
-const getFacultyName = (id) => props.faculties.find(f => f.id == id)?.name ?? '—';
-const getDeptName    = (id) => props.departments.find(d => d.id == id)?.name ?? '—';
-const getFacultyForDept = (deptId) => {
-    const dept = props.departments.find(d => d.id == deptId);
-    return dept ? getFacultyName(dept.faculty_id) : '—';
-};
+// ── Helpers ───────────────────────────────────────────────────
+const getFacultyName  = (id) => props.faculties.find(f => f.id == id)?.name ?? '—';
+const getDeptName     = (id) => props.departments.find(d => d.id == id)?.name ?? '—';
 
-const levels = ['certificate','diploma','degree','masters','phd'];
+const levels = ['certificate', 'diploma', 'degree', 'bachelors', 'masters', 'phd'];
+
+// Departments without HOD
+const deptsWithoutHod    = computed(() => props.departments.filter(d => !d.hod_user_id));
+const deptsWithHod       = computed(() => props.departments.filter(d => d.hod_user_id));
 </script>
 
 <template>
@@ -65,33 +104,42 @@ const levels = ['certificate','diploma','degree','masters','phd'];
 
             <!-- Flash -->
             <transition enter-active-class="transition duration-300" enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0">
-                <div v-if="flash.success" class="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 font-medium flex items-center gap-2">
-                    <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    {{ flash.success }}
+                <div v-if="flash.success"
+                    class="rounded-xl bg-green-50 border border-green-200 px-4 py-4 flex items-start gap-3">
+                    <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
+                        <svg class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-green-800">{{ flash.success }}</p>
+                    </div>
                 </div>
             </transition>
 
             <!-- Tabs -->
             <div class="border-b border-gray-200">
-                <nav class="-mb-px flex gap-0">
+                <nav class="-mb-px flex gap-0 overflow-x-auto">
                     <button
                         v-for="tab in [
                             { key: 'faculties',   label: 'Faculties',   count: faculties.length },
                             { key: 'departments', label: 'Departments', count: departments.length },
                             { key: 'programs',    label: 'Programs',    count: programs.length },
+                            { key: 'hods',        label: 'HOD Management', count: deptsWithoutHod.length, badge: true },
                         ]"
                         :key="tab.key"
                         @click="activeTab = tab.key"
-                        class="flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-medium transition"
+                        class="flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-medium transition whitespace-nowrap"
                         :class="activeTab === tab.key
                             ? 'border-indigo-600 text-indigo-600'
                             : 'border-transparent text-gray-500 hover:text-gray-700'"
                     >
                         {{ tab.label }}
                         <span class="rounded-full px-1.5 py-0.5 text-xs font-bold"
-                            :class="activeTab === tab.key ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'">
+                            :class="[
+                                activeTab === tab.key ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500',
+                                tab.badge && tab.count > 0 ? 'bg-red-100 text-red-600' : ''
+                            ]">
                             {{ tab.count }}
                         </span>
                     </button>
@@ -100,8 +148,6 @@ const levels = ['certificate','diploma','degree','masters','phd'];
 
             <!-- ── FACULTIES TAB ──────────────────────────────── -->
             <div v-if="activeTab === 'faculties'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                <!-- Add form -->
                 <div class="lg:col-span-1">
                     <div class="rounded-xl border border-gray-200 bg-white p-5 sticky top-4">
                         <h3 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -121,7 +167,6 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Code *</label>
                                 <input v-model="facultyForm.code" type="text" placeholder="e.g. FITE"
                                     class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm uppercase focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" required/>
-                                <p v-if="facultyForm.errors.code" class="mt-1 text-xs text-red-500">{{ facultyForm.errors.code }}</p>
                             </div>
                             <button type="submit" :disabled="facultyForm.processing"
                                 class="w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
@@ -130,16 +175,12 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                         </form>
                     </div>
                 </div>
-
-                <!-- List -->
                 <div class="lg:col-span-2">
                     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                         <div class="border-b border-gray-100 px-5 py-3 bg-gray-50">
                             <h3 class="text-sm font-semibold text-gray-700">All Faculties ({{ faculties.length }})</h3>
                         </div>
-                        <div v-if="faculties.length === 0" class="px-5 py-10 text-center text-sm text-gray-400">
-                            No faculties yet. Add one to get started.
-                        </div>
+                        <div v-if="faculties.length === 0" class="px-5 py-10 text-center text-sm text-gray-400">No faculties yet.</div>
                         <table v-else class="min-w-full divide-y divide-gray-100 text-sm">
                             <thead><tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
@@ -152,10 +193,8 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                                 <tr v-for="(f, i) in faculties" :key="f.id" class="hover:bg-gray-50">
                                     <td class="px-4 py-3 text-gray-400 text-xs">{{ i + 1 }}</td>
                                     <td class="px-4 py-3 font-medium text-gray-900">{{ f.name }}</td>
-                                    <td class="px-4 py-3 font-mono text-xs font-bold text-indigo-600 bg-indigo-50 rounded">{{ f.code }}</td>
-                                    <td class="px-4 py-3 text-gray-500 text-xs">
-                                        {{ departments.filter(d => d.faculty_id == f.id).length }} depts
-                                    </td>
+                                    <td class="px-4 py-3"><span class="font-mono text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{{ f.code }}</span></td>
+                                    <td class="px-4 py-3 text-gray-500 text-xs">{{ departments.filter(d => d.faculty_id == f.id).length }} depts</td>
                                     <td class="px-4 py-3">
                                         <span class="rounded-full px-2 py-0.5 text-xs font-medium"
                                             :class="f.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
@@ -171,7 +210,6 @@ const levels = ['certificate','diploma','degree','masters','phd'];
 
             <!-- ── DEPARTMENTS TAB ────────────────────────────── -->
             <div v-if="activeTab === 'departments'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
                 <div class="lg:col-span-1">
                     <div class="rounded-xl border border-gray-200 bg-white p-5 sticky top-4">
                         <h3 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -184,7 +222,7 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Faculty *</label>
                                 <select v-model="deptForm.faculty_id"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 bg-white" required>
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-purple-500 bg-white" required>
                                     <option value="">Select faculty...</option>
                                     <option v-for="f in faculties" :key="f.id" :value="f.id">{{ f.name }} ({{ f.code }})</option>
                                 </select>
@@ -193,14 +231,13 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Department Name *</label>
                                 <input v-model="deptForm.name" type="text" placeholder="e.g. Computer Science"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500" required/>
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-purple-500" required/>
                                 <p v-if="deptForm.errors.name" class="mt-1 text-xs text-red-500">{{ deptForm.errors.name }}</p>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Code *</label>
-                                <input v-model="deptForm.code" type="text" placeholder="e.g. CS"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm uppercase focus:border-purple-500 focus:ring-1 focus:ring-purple-500" required/>
-                                <p v-if="deptForm.errors.code" class="mt-1 text-xs text-red-500">{{ deptForm.errors.code }}</p>
+                                <input v-model="deptForm.code" type="text" placeholder="e.g. CCT"
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm uppercase focus:border-purple-500" required/>
                             </div>
                             <button type="submit" :disabled="deptForm.processing"
                                 class="w-full rounded-lg bg-purple-600 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50">
@@ -209,29 +246,33 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                         </form>
                     </div>
                 </div>
-
                 <div class="lg:col-span-2">
                     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                         <div class="border-b border-gray-100 px-5 py-3 bg-gray-50">
                             <h3 class="text-sm font-semibold text-gray-700">All Departments ({{ departments.length }})</h3>
                         </div>
-                        <div v-if="departments.length === 0" class="px-5 py-10 text-center text-sm text-gray-400">
-                            No departments yet.
-                        </div>
-                        <table v-else class="min-w-full divide-y divide-gray-100 text-sm">
+                        <table class="min-w-full divide-y divide-gray-100 text-sm">
                             <thead><tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Code</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Faculty</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">HOD</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Programs</th>
                             </tr></thead>
                             <tbody class="divide-y divide-gray-50">
+                                <tr v-if="departments.length === 0">
+                                    <td colspan="6" class="px-4 py-10 text-center text-gray-400">No departments yet.</td>
+                                </tr>
                                 <tr v-for="(d, i) in departments" :key="d.id" class="hover:bg-gray-50">
                                     <td class="px-4 py-3 text-gray-400 text-xs">{{ i + 1 }}</td>
                                     <td class="px-4 py-3 font-medium text-gray-900">{{ d.name }}</td>
-                                    <td class="px-4 py-3 font-mono text-xs font-bold text-purple-600">{{ d.code }}</td>
+                                    <td class="px-4 py-3"><span class="font-mono text-xs font-bold text-purple-600">{{ d.code }}</span></td>
                                     <td class="px-4 py-3 text-xs text-gray-500">{{ getFacultyName(d.faculty_id) }}</td>
+                                    <td class="px-4 py-3 text-xs">
+                                        <span v-if="d.hod_name" class="text-green-700 font-medium">{{ d.hod_name }}</span>
+                                        <span v-else class="text-red-500 font-medium">Not assigned</span>
+                                    </td>
                                     <td class="px-4 py-3 text-xs text-gray-500">
                                         {{ programs.filter(p => p.department_id == d.id).length }} programs
                                     </td>
@@ -244,7 +285,6 @@ const levels = ['certificate','diploma','degree','masters','phd'];
 
             <!-- ── PROGRAMS TAB ───────────────────────────────── -->
             <div v-if="activeTab === 'programs'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
                 <div class="lg:col-span-1">
                     <div class="rounded-xl border border-gray-200 bg-white p-5 sticky top-4">
                         <h3 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -257,12 +297,10 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Department *</label>
                                 <select v-model="programForm.department_id"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white" required>
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-teal-500 bg-white" required>
                                     <option value="">Select department...</option>
                                     <optgroup v-for="f in faculties" :key="f.id" :label="f.name">
-                                        <option
-                                            v-for="d in departments.filter(dep => dep.faculty_id == f.id)"
-                                            :key="d.id" :value="d.id">
+                                        <option v-for="d in departments.filter(dep => dep.faculty_id == f.id)" :key="d.id" :value="d.id">
                                             {{ d.name }} ({{ d.code }})
                                         </option>
                                     </optgroup>
@@ -272,30 +310,34 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Program Name *</label>
                                 <input v-model="programForm.name" type="text" placeholder="e.g. Bachelor of IT"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500" required/>
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-teal-500" required/>
                                 <p v-if="programForm.errors.name" class="mt-1 text-xs text-red-500">{{ programForm.errors.name }}</p>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Code *</label>
                                     <input v-model="programForm.code" type="text" placeholder="e.g. BIT"
-                                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm uppercase focus:border-teal-500 focus:ring-1 focus:ring-teal-500" required/>
-                                    <p v-if="programForm.errors.code" class="mt-1 text-xs text-red-500">{{ programForm.errors.code }}</p>
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm uppercase focus:border-teal-500" required/>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Duration (yrs) *</label>
                                     <input v-model="programForm.duration_years" type="number" min="1" max="7"
-                                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500" required/>
-                                    <p v-if="programForm.errors.duration_years" class="mt-1 text-xs text-red-500">{{ programForm.errors.duration_years }}</p>
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-teal-500" required/>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Level *</label>
                                 <select v-model="programForm.level"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white capitalize" required>
-                                    <option v-for="lv in levels" :key="lv" :value="lv" class="capitalize">{{ lv }}</option>
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-teal-500 bg-white capitalize" required>
+                                    <option value="">Select level...</option>
+                                    <option value="certificate">Certificate</option>
+                                    <option value="diploma">Diploma</option>
+                                    <option value="bachelors">Degree (Bachelors)</option>
+                                    <option value="masters">Masters</option>
+                                    <option value="phd">PhD</option>
                                 </select>
                                 <p v-if="programForm.errors.level" class="mt-1 text-xs text-red-500">{{ programForm.errors.level }}</p>
+                                <p v-if="programForm.errors.name" class="mt-1 text-xs text-red-500">{{ programForm.errors.name }}</p>
                             </div>
                             <button type="submit" :disabled="programForm.processing"
                                 class="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50">
@@ -304,16 +346,12 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                         </form>
                     </div>
                 </div>
-
                 <div class="lg:col-span-2">
                     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                         <div class="border-b border-gray-100 px-5 py-3 bg-gray-50">
                             <h3 class="text-sm font-semibold text-gray-700">All Programs ({{ programs.length }})</h3>
                         </div>
-                        <div v-if="programs.length === 0" class="px-5 py-10 text-center text-sm text-gray-400">
-                            No programs yet.
-                        </div>
-                        <table v-else class="min-w-full divide-y divide-gray-100 text-sm">
+                        <table class="min-w-full divide-y divide-gray-100 text-sm">
                             <thead><tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
@@ -323,15 +361,18 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Duration</th>
                             </tr></thead>
                             <tbody class="divide-y divide-gray-50">
+                                <tr v-if="programs.length === 0">
+                                    <td colspan="6" class="px-4 py-10 text-center text-gray-400">No programs yet.</td>
+                                </tr>
                                 <tr v-for="(p, i) in programs" :key="p.id" class="hover:bg-gray-50">
                                     <td class="px-4 py-3 text-gray-400 text-xs">{{ i + 1 }}</td>
                                     <td class="px-4 py-3 font-medium text-gray-900">{{ p.name }}</td>
-                                    <td class="px-4 py-3 font-mono text-xs font-bold text-teal-600">{{ p.code }}</td>
+                                    <td class="px-4 py-3"><span class="font-mono text-xs font-bold text-teal-600">{{ p.code }}</span></td>
                                     <td class="px-4 py-3">
                                         <span class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700 capitalize">{{ p.level }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-xs text-gray-500">{{ getDeptName(p.department_id) }}</td>
-                                    <td class="px-4 py-3 text-xs text-gray-500">{{ p.duration_display ?? p.duration_years + 'yr' }}</td>
+                                    <td class="px-4 py-3 text-xs text-gray-500">{{ p.duration_display ?? p.duration_years + ' yr' }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -339,6 +380,262 @@ const levels = ['certificate','diploma','degree','masters','phd'];
                 </div>
             </div>
 
+            <!-- ── HOD MANAGEMENT TAB ─────────────────────────── -->
+            <div v-if="activeTab === 'hods'" class="space-y-6">
+
+                <!-- Info -->
+                <div class="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 flex gap-2 items-start">
+                    <svg class="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="text-xs text-blue-700">
+                        <p class="font-semibold mb-0.5">HOD Account Creation</p>
+                        <p>When you create an HOD, a user account is automatically created with their <strong>last name as the temporary password</strong>. They must change it on first login. The previous HOD (if any) will be deactivated.</p>
+                    </div>
+                </div>
+
+                <!-- Departments without HOD -->
+                <div v-if="deptsWithoutHod.length > 0">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="h-2 w-2 rounded-full bg-red-500"></div>
+                        <h3 class="text-sm font-semibold text-gray-700">
+                            Departments Without HOD ({{ deptsWithoutHod.length }})
+                        </h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div v-for="d in deptsWithoutHod" :key="d.id"
+                            class="rounded-xl border-2 border-dashed border-red-200 bg-red-50 p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">{{ d.name }}</p>
+                                    <p class="text-xs font-mono text-gray-400">{{ d.code }}</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">{{ getFacultyName(d.faculty_id) }}</p>
+                                </div>
+                                <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+                                    No HOD
+                                </span>
+                            </div>
+                            <button
+                                @click="openHodModal(d, 'assign')"
+                                class="w-full rounded-lg bg-indigo-600 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
+                            >
+                                + Assign HOD
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Departments with HOD -->
+                <div v-if="deptsWithHod.length > 0">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="h-2 w-2 rounded-full bg-green-500"></div>
+                        <h3 class="text-sm font-semibold text-gray-700">
+                            Departments With HOD ({{ deptsWithHod.length }})
+                        </h3>
+                    </div>
+                    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                        <table class="min-w-full divide-y divide-gray-100 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Department</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Faculty</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Current HOD</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">HOD Email</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                <tr v-for="d in deptsWithHod" :key="d.id" class="hover:bg-gray-50">
+                                    <td class="px-4 py-3">
+                                        <p class="font-medium text-gray-900 text-sm">{{ d.name }}</p>
+                                        <p class="font-mono text-xs text-gray-400">{{ d.code }}</p>
+                                    </td>
+                                    <td class="px-4 py-3 text-xs text-gray-500">{{ getFacultyName(d.faculty_id) }}</td>
+                                    <td class="px-4 py-3">
+                                        <span class="font-semibold text-green-700 text-sm">{{ d.hod_name }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-xs text-gray-500">{{ d.hod_email }}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        <button
+                                            @click="openHodModal(d, 'replace')"
+                                            class="rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 hover:bg-orange-100"
+                                        >
+                                            Replace HOD
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div v-if="departments.length === 0" class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-12 text-center">
+                    <p class="text-sm text-gray-400">No departments found. Create departments first.</p>
+                    <button @click="activeTab = 'departments'" class="mt-3 text-sm text-indigo-600 font-medium">Go to Departments →</button>
+                </div>
+
+            </div>
+
         </div>
     </AdminLayout>
+
+    <!-- ── HOD Creation Modal ─────────────────────────────────── -->
+    <div v-if="showHodModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
+
+            <!-- Modal header -->
+            <div class="border-b border-gray-100 px-6 py-4 bg-gray-50 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-semibold text-gray-900">
+                        {{ hodForm.action === 'replace' ? 'Replace HOD' : 'Assign HOD' }}
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        Department: <strong>{{ selectedDept?.name }}</strong>
+                        <span v-if="hodForm.action === 'replace'" class="ml-1 text-orange-600">
+                            — Current HOD ({{ selectedDept?.hod_name }}) will be deactivated
+                        </span>
+                    </p>
+                </div>
+                <button @click="closeHodModal"
+                    class="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Warn if replacing -->
+            <div v-if="hodForm.action === 'replace'"
+                class="mx-6 mt-4 rounded-lg bg-orange-50 border border-orange-200 px-3 py-2.5 text-xs text-orange-700">
+                ⚠️ Replacing the HOD will deactivate <strong>{{ selectedDept?.hod_name }}</strong>'s account and demote them to lecturer role.
+            </div>
+
+            <!-- Form -->
+            <div class="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+
+                <!-- ✅ Show any error returned -->
+                <div v-if="Object.keys(hodForm.errors).length > 0"
+                    class="rounded-lg bg-red-50 border border-red-200 px-3 py-3">
+                    <p class="text-xs font-semibold text-red-700 mb-1">Please fix the following:</p>
+                    <ul class="space-y-0.5">
+                        <li v-for="(err, field) in hodForm.errors" :key="field" class="text-xs text-red-600">
+                            • {{ err }}
+                        </li>
+                    </ul>
+                </div>
+
+
+
+                <!-- Name row -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">First Name *</label>
+                        <input v-model="hodForm.first_name" type="text" placeholder="e.g. John"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" required/>
+                        <p v-if="hodForm.errors.first_name" class="mt-1 text-xs text-red-500">{{ hodForm.errors.first_name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Last Name *</label>
+                        <input v-model="hodForm.last_name" type="text" placeholder="e.g. Kimaro"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" required/>
+                        <p v-if="hodForm.errors.last_name" class="mt-1 text-xs text-red-500">{{ hodForm.errors.last_name }}</p>
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Email Address *</label>
+                    <input v-model="hodForm.email" type="email" placeholder="hod.department@college.ac.tz"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" required/>
+                    <p v-if="hodForm.errors.email" class="mt-1 text-xs text-red-500">{{ hodForm.errors.email }}</p>
+                </div>
+
+                <!-- Phone + Staff Number -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Phone</label>
+                        <input v-model="hodForm.phone" type="text" placeholder="07XXXXXXXX"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Staff Number</label>
+                        <input v-model="hodForm.staff_number" type="text" placeholder="NIT/HOD/XXX"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 font-mono"/>
+                    </div>
+                </div>
+
+                <!-- Title + Gender -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Title</label>
+                        <select v-model="hodForm.title"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 bg-white">
+
+                            <option value="Dr">Dr.</option>
+                            <option value="Prof">Prof.</option>
+                            <option value="Mr">Mr.</option>
+                            <option value="Ms">Ms.</option>
+                            <option value="Mrs">Mrs.</option>
+                            <option value="Eng">Eng.</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Gender</label>
+                        <select v-model="hodForm.gender"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 bg-white">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Specialization -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Specialization</label>
+                    <input v-model="hodForm.specialization" type="text" placeholder="e.g. Computer Science"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500"/>
+                </div>
+
+                <!-- Password notice -->
+                <div class="rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2.5">
+                    <p class="text-xs text-yellow-700">
+                        <strong>Temporary Password:</strong> The HOD's last name will be set as their initial password.
+                        They will be required to change it on first login.
+                    </p>
+                    <p v-if="hodForm.last_name" class="mt-1 text-xs font-mono font-bold text-yellow-800">
+                        Password will be: "{{ hodForm.last_name }}"
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Actions -->
+            <div class="border-t border-gray-100 px-6 py-4 flex gap-3 bg-gray-50">
+                <button
+                    @click="submitHod"
+                    :disabled="hodForm.processing || !hodForm.first_name || !hodForm.last_name || !hodForm.email"
+                    class="flex-1 rounded-xl py-3 text-sm font-bold text-white transition disabled:opacity-50"
+                    :class="hodForm.action === 'replace'
+                        ? 'bg-orange-500 hover:bg-orange-600'
+                        : 'bg-indigo-600 hover:bg-indigo-700'"
+                >
+                    <span v-if="hodForm.processing" class="flex items-center justify-center gap-2">
+                        <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                        </svg>
+                        Creating HOD account...
+                    </span>
+                    <span v-else>
+                        {{ hodForm.action === 'replace' ? '⚠️ Replace HOD' : '✓ Create HOD Account' }}
+                    </span>
+                </button>
+                <button @click="closeHodModal"
+                    class="rounded-xl border border-gray-200 px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100">
+                    Cancel
+                </button>
+            </div>
+
+        </div>
+    </div>
+
 </template>

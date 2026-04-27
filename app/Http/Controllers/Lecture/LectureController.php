@@ -91,7 +91,7 @@ class LectureController extends Controller
             try {
                 $response = Http::timeout(5)
                     ->get($this->feedbackApiUrl('feedback/track/' . $code), [
-                        'sender_role' => 'lecturer', // ✅ lecturer can only see their own
+                        'sender_role' => 'lecturer', //  lecturer can only see their own
                     ]);
 
                 if ($response->successful()) {
@@ -144,4 +144,66 @@ class LectureController extends Controller
 
         return back()->with('followup_success', true);
     }
+
+
+
+    public function evaluationResults(): Response
+{
+    $user         = session('user');
+    $departmentId = session('department_id');
+
+    // ✅ Get the current lecturer's user ID
+    // This is the same ID stored as lecturer_id in course_evaluations
+    $lecturerId = $user['id'] ?? null;
+
+    // If not in session root, try to get from auth service
+    if (!$lecturerId) {
+        try {
+            $meResp = Http::withHeaders(['Authorization' => 'Bearer ' . session('jwt_token')])
+                ->timeout(5)
+                ->get(config('services.auth_service.url') . '/api/auth/me');
+            if ($meResp->successful()) {
+                $lecturerId = $meResp->json('user.id') ?? null;
+            }
+        } catch (\Exception $e) {
+            $lecturerId = null;
+        }
+    }
+
+    // Get all windows
+    try {
+        $windowsResp = Http::timeout(5)
+            ->get($this->feedbackApiUrl('evaluation-windows'));
+        $windows = $windowsResp->successful() ? $windowsResp->json('windows', []) : [];
+    } catch (\Exception $e) {
+        $windows = [];
+    }
+
+    // Get results filtered by THIS lecturer's ID only
+    $results = [];
+    if ($departmentId && !empty($windows)) {
+        try {
+            $activeWindow = collect($windows)->firstWhere('is_open', true);
+            if ($activeWindow) {
+                $resp = Http::timeout(5)
+                    ->get($this->feedbackApiUrl('evaluations/lecturer'), [
+                        'department_id' => $departmentId,
+                        'lecturer_id'   => $lecturerId,  // ✅ filter by THIS lecturer
+                        'window_id'     => $activeWindow['id'],
+                    ]);
+                $results = $resp->successful() ? $resp->json('analytics', []) : [];
+            }
+        } catch (\Exception $e) {
+            $results = [];
+        }
+    }
+
+    return Inertia::render('Lecture/EvaluationResults', [
+        'windows'       => $windows,
+        'results'       => $results,
+        'department_id' => $departmentId,
+        'lecturer_id'   => $lecturerId,
+        'user'          => $user,
+    ]);
+}
 }

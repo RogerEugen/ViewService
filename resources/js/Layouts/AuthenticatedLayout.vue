@@ -69,6 +69,14 @@ const showingNavigationDropdown = ref(false);
                                         My Submission
                                     </div>
                                 </NavLink>
+
+                                <NavLink :href="route('student.evaluations')"
+                                         :active="route().current('student.evaluations')">
+                                         <div class="flex items-center gap-2">
+                                            <DocumentTextIcon class="w-5 h-5" />
+                                            Evaluation
+                                         </div>
+                                </NavLink>
                             </div>
                         </div>
 

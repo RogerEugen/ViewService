@@ -18,9 +18,69 @@ class HodController extends Controller
     // ── Dashboard ──────────────────────────────────────────────
     public function dashboard(): Response
     {
-        return Inertia::render('Hod/Dashboard');
-    }
+        $departmentId = session('department_id');
+        $user         = session('user');
 
+        // Feedback stats
+        try {
+            $response = Http::timeout(5)
+                ->get($this->feedbackApiUrl('hod/feedbacks'), [
+                    'department_id' => $departmentId,
+                ]);
+            $feedbacks = $response->successful() ? $response->json('feedbacks', []) : [];
+        } catch (\Exception $e) {
+            $feedbacks = [];
+        }
+
+        // Evaluation stats for this department
+        $evalStats = ['total_courses' => 0, 'total_responses' => 0, 'avg_overall' => 0];
+        try {
+            $windowResp = Http::timeout(5)
+                ->get($this->feedbackApiUrl('evaluation-windows/active'));
+            $activeWindow = $windowResp->successful() ? $windowResp->json('window') : null;
+
+            if ($activeWindow) {
+                $evalResp = Http::timeout(5)
+                    ->get($this->feedbackApiUrl('evaluations/department'), [
+                        'department_id' => $departmentId,
+                        'window_id'     => $activeWindow['id'],
+                    ]);
+                $analytics = $evalResp->successful() ? $evalResp->json('analytics', []) : [];
+
+                $evalStats = [
+                    'total_courses'   => count($analytics),
+                    'total_responses' => array_sum(array_column($analytics, 'total_responses')),
+                    'avg_overall'     => count($analytics)
+                        ? round(array_sum(array_column($analytics, 'avg_overall')) / count($analytics), 2)
+                        : 0,
+                ];
+            }
+        } catch (\Exception $e) {
+        }
+
+        $stats = [
+            'total'        => count($feedbacks),
+            'submitted'    => count(array_filter($feedbacks, fn($f) => $f['status'] === 'submitted')),
+            'under_review' => count(array_filter($feedbacks, fn($f) => $f['status'] === 'under_review')),
+            'escalated'    => count(array_filter($feedbacks, fn($f) => $f['status'] === 'escalated')),
+            'resolved'     => count(array_filter($feedbacks, fn($f) => $f['status'] === 'resolved')),
+            'urgent'       => count(array_filter($feedbacks, fn($f) => $f['priority'] === 'urgent')),
+        ];
+
+        // Recent 5 feedbacks
+        $recent = array_slice(
+            array_filter($feedbacks, fn($f) => $f['status'] !== 'resolved'),
+            0,
+            5
+        );
+
+        return Inertia::render('Hod/Dashboard', [
+            'stats'      => $stats,
+            'evalStats'  => $evalStats,
+            'recent'     => array_values($recent),
+            'user'       => $user,
+        ]);
+    }
     // ── List all feedbacks for HOD's department ────────────────
     public function feedbacks(): Response
     {
@@ -143,4 +203,43 @@ class HodController extends Controller
 
         return back()->with('success', 'Feedback marked as resolved.');
     }
+
+    public function evaluations(): Response
+{
+    $departmentId = session('department_id');
+    $user         = session('user');
+
+    try {
+        $windowsResp = Http::timeout(5)->get($this->feedbackApiUrl('evaluation-windows'));
+        $windows     = $windowsResp->successful() ? $windowsResp->json('windows', []) : [];
+    } catch (\Exception $e) {
+        $windows = [];
+    }
+
+    $results = [];
+    $activeWindow = null;
+
+    if (!empty($windows)) {
+        try {
+            $activeWindow = collect($windows)->firstWhere('is_open', true);
+            if ($activeWindow) {
+                $resp    = Http::timeout(5)->get($this->feedbackApiUrl('evaluations/department'), [
+                    'department_id' => $departmentId,
+                    'window_id'     => $activeWindow['id'],
+                ]);
+                $results = $resp->successful() ? $resp->json('analytics', []) : [];
+            }
+        } catch (\Exception $e) {}
+    }
+
+    return Inertia::render('Hod/Evaluations', [
+        'windows'       => $windows,
+        'results'       => $results,
+        'activeWindow'  => $activeWindow,
+        'department_id' => $departmentId,
+        'user'          => $user,
+    ]);
+}
+
+    
 }

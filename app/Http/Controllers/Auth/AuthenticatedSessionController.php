@@ -204,20 +204,33 @@ class AuthenticatedSessionController extends Controller
         session()->flush();
         $request->session()->regenerate();
 
+        $user    = $data['user'];
+        $profile = $user['profile'] ?? [];
+
+        // ✅ faculty_id resolution — prioritize from user payload directly
+        // Dean gets faculty_id from getFacultyId() in Auth Service
+        $facultyId = $user['faculty_id']          // ← from buildUserPayload (dean)
+            ?? $profile['faculty_id']             // ← from studentProfile
+            ?? null;
+
+        $departmentId = $user['department_id']    // ← from buildUserPayload
+            ?? $profile['department_id']          // ← from studentProfile
+            ?? null;
+
         session([
             'jwt_token'            => $data['jwt'],
             'anonymous_token'      => $data['anonymous_token'],
             'expires_in'           => $data['expires_in'],
             'token_issued_at'      => now()->timestamp,
             'must_change_password' => false,
-            'user'                 => $data['user'],
-            'user_role'            => $data['user']['role'],
-            'user_name'            => $data['user']['name'],
-            'user_email'           => $data['user']['email'],
-            'department_id'        => $data['user']['department_id'] ?? null,
+            'user'                 => $user,
+            'user_role'            => $user['role'],
+            'user_name'            => $user['name'],
+            'user_email'           => $user['email'],
+            'department_id'        => $departmentId,
+            'faculty_id'           => $facultyId,
         ]);
     }
-
     // ─────────────────────────────────────────────
     // PRIVATE — role to dashboard route
     // ─────────────────────────────────────────────

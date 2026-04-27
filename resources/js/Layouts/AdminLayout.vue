@@ -46,6 +46,13 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Manage Data
                                 </NavLink>
+                                
+                                 <NavLink
+                                    :href="route('admin.evaluation-windows')"
+                                    :active="route().current('admin.evaluation-windows')"
+                                >
+                                    Evalution-Window
+                                </NavLink>
                             </div>
                         </div>
 

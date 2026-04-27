@@ -52,7 +52,10 @@ Route::middleware(['auth.session', 'student'])->group(function () {
     Route::get('/student/feedback',   [StudentController::class, 'FeedBack'])->name('student.FeedBack');
     Route::post('/student/feedback',  [StudentController::class, 'submitFeedback'])->name('student.feedback.submit');
     Route::get('/student/track',      [StudentController::class, 'trackFeedback'])->name('student.feedback.track');
-     Route::post('/student/followup',  [StudentController::class, 'sendFollowup'])->name('student.feedback.followup');
+    Route::post('/student/followup',  [StudentController::class, 'sendFollowup'])->name('student.feedback.followup');
+
+    Route::get('/student/evaluations',  [StudentController::class, 'evaluations'])->name('student.evaluations');
+    Route::post('/student/evaluations', [StudentController::class, 'submitEvaluation'])->name('student.evaluations.submit');
 });
 
 // Lecturer routes
@@ -62,6 +65,7 @@ Route::middleware(['auth.session', 'lecture'])->group(function () {
     Route::post('/lecturer/feedback',  [LectureController::class, 'submitFeedback'])->name('lecture.feedback.submit');
     Route::get('/lecturer/track',      [LectureController::class, 'trackFeedback'])->name('lecture.feedback.track');
     Route::post('/lecturer/followup',  [LectureController::class, 'sendFollowup'])->name('lecture.feedback.followup');
+    Route::get('/lecturer/evaluations', [LectureController::class, 'evaluationResults'])->name('lecture.evaluations');
 });
 
 // Admin routes
@@ -76,6 +80,12 @@ Route::middleware(['auth.session', 'admin'])->prefix('admin')->group(function ()
     Route::post('/faculties',                      [AdminController::class, 'storeFaculty'])->name('admin.faculties.store');
     Route::post('/departments',                    [AdminController::class, 'storeDepartment'])->name('admin.departments.store');
     Route::post('/programs',                       [AdminController::class, 'storeProgram'])->name('admin.programs.store');
+
+    Route::get('/evaluation-windows',          [AdminController::class, 'evaluationWindows'])->name('admin.evaluation-windows');
+    Route::post('/evaluation-windows',         [AdminController::class, 'storeEvaluationWindow'])->name('admin.evaluation-windows.store');
+    Route::post('/evaluation-windows/{id}/toggle', [AdminController::class, 'toggleEvaluationWindow'])->name('admin.evaluation-windows.toggle');
+    Route::delete('/evaluation-windows/{id}',  [AdminController::class, 'deleteEvaluationWindow'])->name('admin.evaluation-windows.delete');
+    Route::post('/departments/{id}/hod', [AdminController::class, 'storeHod'])->name('admin.departments.hod.store');
 });
 
 //registrar routes
@@ -93,6 +103,7 @@ Route::middleware(['auth.session', 'hod'])->group(function () {
     Route::post('/hod/feedbacks/{id}/respond',  [HodController::class, 'respond'])->name('hod.feedbacks.respond');
     Route::post('/hod/feedbacks/{id}/escalate', [HodController::class, 'escalate'])->name('hod.feedbacks.escalate');
     Route::post('/hod/feedbacks/{id}/resolve',  [HodController::class, 'resolve'])->name('hod.feedbacks.resolve');
+    Route::get('/hod/evaluations', [HodController::class, 'evaluations'])->name('hod.evaluations');
 });
 
 Route::middleware(['auth.session', 'dean'])->group(function () {
@@ -102,6 +113,7 @@ Route::middleware(['auth.session', 'dean'])->group(function () {
     Route::post('/dean/feedbacks/{id}/respond',   [DeanController::class, 'respond'])->name('dean.feedbacks.respond');
     Route::post('/dean/feedbacks/{id}/escalate',  [DeanController::class, 'escalate'])->name('dean.feedbacks.escalate');
     Route::post('/dean/feedbacks/{id}/resolve',   [DeanController::class, 'resolve'])->name('dean.feedbacks.resolve');
+    Route::get('/dean/evaluations', [DeanController::class, 'evaluations'])->name('dean.evaluations');
 });
 
 Route::middleware(['auth.session', 'rector'])->group(function () {
