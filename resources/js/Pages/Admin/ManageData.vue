@@ -37,10 +37,24 @@ const hodForm = useForm({
     action:        'assign',
 });
 
+const deanForm = useForm({
+    first_name:    '',
+    last_name:     '',
+    email:         '',
+    phone:         '',
+    staff_number:  '',
+    title:         'Dr',
+    gender:        'Male',
+    specialization:'',
+    action:        'assign',
+});
+
 const selectedDept    = ref(null);
 const showHodModal    = ref(false);
 const showSuccess     = ref(false);
 const createdHodInfo  = ref(null);
+const selectedFaculty = ref(null);
+const showDeanModal   = ref(false);
 
 const openHodModal = (dept, action = 'assign') => {
     selectedDept.value  = dept;
@@ -60,6 +74,25 @@ const submitHod = () => {
         onSuccess: () => {
             closeHodModal();
         },
+    });
+};
+
+const openDeanModal = (faculty, action = 'assign') => {
+    selectedFaculty.value = faculty;
+    deanForm.action = action;
+    deanForm.specialization = faculty.name;
+    showDeanModal.value = true;
+};
+
+const closeDeanModal = () => {
+    showDeanModal.value = false;
+    selectedFaculty.value = null;
+    deanForm.reset();
+};
+
+const submitDean = () => {
+    deanForm.post(route('admin.faculties.dean.store', selectedFaculty.value.id), {
+        onSuccess: () => closeDeanModal(),
     });
 };
 
@@ -91,6 +124,8 @@ const levels = ['certificate', 'diploma', 'degree', 'bachelors', 'masters', 'phd
 // Departments without HOD
 const deptsWithoutHod    = computed(() => props.departments.filter(d => !d.hod_user_id));
 const deptsWithHod       = computed(() => props.departments.filter(d => d.hod_user_id));
+const facultiesWithoutDean = computed(() => props.faculties.filter(f => !f.dean_user_id));
+const facultiesWithDean    = computed(() => props.faculties.filter(f => f.dean_user_id));
 </script>
 
 <template>
@@ -126,6 +161,7 @@ const deptsWithHod       = computed(() => props.departments.filter(d => d.hod_us
                             { key: 'departments', label: 'Departments', count: departments.length },
                             { key: 'programs',    label: 'Programs',    count: programs.length },
                             { key: 'hods',        label: 'HOD Management', count: deptsWithoutHod.length, badge: true },
+                            { key: 'deans',       label: 'Dean Management', count: facultiesWithoutDean.length, badge: true },
                         ]"
                         :key="tab.key"
                         @click="activeTab = tab.key"
@@ -476,6 +512,86 @@ const deptsWithHod       = computed(() => props.departments.filter(d => d.hod_us
 
             </div>
 
+            <!-- ── DEAN MANAGEMENT TAB ─────────────────────────── -->
+            <div v-if="activeTab === 'deans'" class="space-y-6">
+                <div class="rounded-lg bg-indigo-50 border border-indigo-100 px-4 py-3 flex gap-2 items-start">
+                    <svg class="h-4 w-4 text-indigo-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="text-xs text-indigo-700">
+                        <p class="font-semibold mb-0.5">Dean Account Creation</p>
+                        <p>When you create a Dean, account is created with <strong>last name as temporary password</strong>. First login requires password change.</p>
+                    </div>
+                </div>
+
+                <div v-if="facultiesWithoutDean.length > 0">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="h-2 w-2 rounded-full bg-red-500"></div>
+                        <h3 class="text-sm font-semibold text-gray-700">
+                            Faculties Without Dean ({{ facultiesWithoutDean.length }})
+                        </h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div v-for="f in facultiesWithoutDean" :key="f.id"
+                            class="rounded-xl border-2 border-dashed border-red-200 bg-red-50 p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">{{ f.name }}</p>
+                                    <p class="text-xs font-mono text-gray-400">{{ f.code }}</p>
+                                </div>
+                                <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+                                    No Dean
+                                </span>
+                            </div>
+                            <button
+                                @click="openDeanModal(f, 'assign')"
+                                class="w-full rounded-lg bg-indigo-600 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
+                            >
+                                + Assign Dean
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="facultiesWithDean.length > 0">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="h-2 w-2 rounded-full bg-green-500"></div>
+                        <h3 class="text-sm font-semibold text-gray-700">
+                            Faculties With Dean ({{ facultiesWithDean.length }})
+                        </h3>
+                    </div>
+                    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                        <table class="min-w-full divide-y divide-gray-100 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Faculty</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Code</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Current Dean</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Dean Email</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                <tr v-for="f in facultiesWithDean" :key="f.id" class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium text-gray-900 text-sm">{{ f.name }}</td>
+                                    <td class="px-4 py-3 text-xs text-gray-500 font-mono">{{ f.code }}</td>
+                                    <td class="px-4 py-3"><span class="font-semibold text-green-700 text-sm">{{ f.dean_name }}</span></td>
+                                    <td class="px-4 py-3 text-xs text-gray-500">{{ f.dean_email }}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        <button
+                                            @click="openDeanModal(f, 'replace')"
+                                            class="rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 hover:bg-orange-100"
+                                        >
+                                            Replace Dean
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </AdminLayout>
 
@@ -635,6 +751,103 @@ const deptsWithHod       = computed(() => props.departments.filter(d => d.hod_us
                 </button>
             </div>
 
+        </div>
+    </div>
+
+    <!-- ── DEAN Creation Modal ────────────────────────────────── -->
+    <div v-if="showDeanModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
+            <div class="border-b border-gray-100 px-6 py-4 bg-gray-50 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-semibold text-gray-900">
+                        {{ deanForm.action === 'replace' ? 'Replace Dean' : 'Assign Dean' }}
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        Faculty: <strong>{{ selectedFaculty?.name }}</strong>
+                    </p>
+                </div>
+                <button @click="closeDeanModal"
+                    class="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100">
+                    ✕
+                </button>
+            </div>
+
+            <div class="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+                <div v-if="Object.keys(deanForm.errors).length > 0"
+                    class="rounded-lg bg-red-50 border border-red-200 px-3 py-3">
+                    <p class="text-xs font-semibold text-red-700 mb-1">Please fix the following:</p>
+                    <ul class="space-y-0.5">
+                        <li v-for="(err, field) in deanForm.errors" :key="field" class="text-xs text-red-600">
+                            • {{ err }}
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">First Name *</label>
+                        <input v-model="deanForm.first_name" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" required/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Last Name *</label>
+                        <input v-model="deanForm.last_name" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" required/>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Email Address *</label>
+                    <input v-model="deanForm.email" type="email" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" required/>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Phone</label>
+                        <input v-model="deanForm.phone" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Staff Number</label>
+                        <input v-model="deanForm.staff_number" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-mono"/>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Title</label>
+                        <select v-model="deanForm.title" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white">
+                            <option value="Dr">Dr.</option>
+                            <option value="Prof">Prof.</option>
+                            <option value="Mr">Mr.</option>
+                            <option value="Ms">Ms.</option>
+                            <option value="Mrs">Mrs.</option>
+                            <option value="Eng">Eng.</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Gender</label>
+                        <select v-model="deanForm.gender" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Specialization</label>
+                    <input v-model="deanForm.specialization" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"/>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 px-6 py-4 flex gap-3 bg-gray-50">
+                <button
+                    @click="submitDean"
+                    :disabled="deanForm.processing || !deanForm.first_name || !deanForm.last_name || !deanForm.email"
+                    class="flex-1 rounded-xl py-3 text-sm font-bold text-white transition disabled:opacity-50"
+                    :class="deanForm.action === 'replace' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-indigo-600 hover:bg-indigo-700'"
+                >
+                    {{ deanForm.action === 'replace' ? 'Replace Dean' : 'Create Dean Account' }}
+                </button>
+                <button @click="closeDeanModal"
+                    class="rounded-xl border border-gray-200 px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100">
+                    Cancel
+                </button>
+            </div>
         </div>
     </div>
 

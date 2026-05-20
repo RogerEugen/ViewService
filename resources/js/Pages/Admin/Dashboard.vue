@@ -129,7 +129,7 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString() : '—';
             <!-- Quick actions -->
             <div>
                 <h3 class="text-sm font-semibold text-gray-600 mb-3">Quick Actions</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     <a :href="route('admin.ManageData')" class="rounded-xl border border-gray-200 bg-white p-4 flex items-center gap-3 hover:bg-gray-50 transition">
                         <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-100">
                             <svg class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -172,6 +172,17 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString() : '—';
                         <div>
                             <p class="text-xs font-semibold text-gray-800">Feedbacks</p>
                             <p class="text-xs text-gray-400">{{ stats.feedback?.submitted }} new</p>
+                        </div>
+                    </a>
+                    <a :href="route('admin.ManageData') + '?tab=deans'" class="rounded-xl border border-gray-200 bg-white p-4 flex items-center gap-3 hover:bg-gray-50 transition">
+                        <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-100">
+                            <svg class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M12 3v2.25m6.364-.886l-1.591 1.59M21 12h-2.25m-.886 6.364l-1.59-1.591M12 18.75V21m-4.773-2.227l-1.59 1.59M5.25 12H3m2.227-4.773l-1.59-1.59"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-800">Dean Management</p>
+                            <p class="text-xs text-gray-400">Assign or replace</p>
                         </div>
                     </a>
                 </div>

@@ -85,6 +85,7 @@ Route::middleware(['auth.session', 'admin'])->prefix('admin')->group(function ()
     Route::post('/faculties',                      [AdminController::class, 'storeFaculty'])->name('admin.faculties.store');
     Route::post('/departments',                    [AdminController::class, 'storeDepartment'])->name('admin.departments.store');
     Route::post('/programs',                       [AdminController::class, 'storeProgram'])->name('admin.programs.store');
+    Route::post('/faculties/{id}/dean',            [AdminController::class, 'storeDean'])->name('admin.faculties.dean.store');
 
     Route::get('/evaluation-windows',          [AdminController::class, 'evaluationWindows'])->name('admin.evaluation-windows');
     Route::post('/evaluation-windows',         [AdminController::class, 'storeEvaluationWindow'])->name('admin.evaluation-windows.store');

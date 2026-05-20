@@ -503,6 +503,68 @@ class AdminController extends Controller
             ->with('success', "HOD '{$hodName}' created. Login: {$request->email} / Password: {$tempPass}");
     }
 
+    // ── Create/Replace Dean for faculty ───────────────────────────
+    public function storeDean(Request $request, int $facultyId): RedirectResponse
+    {
+        $request->validate([
+            'first_name'     => ['required', 'string', 'max:100'],
+            'last_name'      => ['required', 'string', 'max:100'],
+            'email'          => ['required', 'email'],
+            'phone'          => ['nullable', 'string'],
+            'staff_number'   => ['nullable', 'string'],
+            'title'          => ['nullable', 'string'],
+            'gender'         => ['nullable', 'in:Male,Female,Other'],
+            'specialization' => ['nullable', 'string'],
+            'action'         => ['required', 'in:assign,replace'],
+        ]);
+
+        $endpoint = $request->action === 'replace'
+            ? "faculties/{$facultyId}/replace-dean"
+            : "faculties/{$facultyId}/assign-dean";
+
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->post($this->apiUrl($endpoint), [
+                    'first_name'     => $request->first_name,
+                    'last_name'      => $request->last_name,
+                    'email'          => $request->email,
+                    'phone'          => $request->phone,
+                    'staff_number'   => $request->staff_number,
+                    'title'          => $request->title,
+                    'gender'         => $request->gender,
+                    'specialization' => $request->specialization,
+                ]);
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'first_name' => 'Auth service unavailable: ' . $e->getMessage(),
+            ])->withInput();
+        }
+
+        $data = $response->json();
+
+        if (!$response->successful()) {
+            $errors = $data['errors'] ?? [];
+            if (!empty($errors)) {
+                $formErrors = [];
+                foreach ($errors as $field => $messages) {
+                    $formErrors[$field] = is_array($messages) ? $messages[0] : $messages;
+                }
+                return back()->withErrors($formErrors)->withInput();
+            }
+
+            return back()->withErrors([
+                'first_name' => $data['message'] ?? 'Failed to create Dean. HTTP: ' . $response->status(),
+            ])->withInput();
+        }
+
+        $deanName = $data['dean']['name'] ?? 'Dean';
+        $tempPass = $data['dean']['temp_password'] ?? $request->last_name;
+
+        return redirect()->route('admin.ManageData', ['tab' => 'deans'])
+            ->with('success', "Dean '{$deanName}' created. Login: {$request->email} / Password: {$tempPass}");
+    }
+
     public function analytics(): Response
 {
     try {
