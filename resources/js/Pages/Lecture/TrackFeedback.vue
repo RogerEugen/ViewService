@@ -13,7 +13,7 @@ const searchCode = ref(props.code ?? '');
 
 const search = () => {
     if (!searchCode.value.trim()) return;
-    window.location.href = route('lecture.feedback.track') + '?code=' + searchCode.value.trim().toUpperCase();
+    window.location.href = route('lecture.track') + '?code=' + searchCode.value.trim().toUpperCase();
 };
 
 const followupForm = useForm({
@@ -186,7 +186,7 @@ const formatDate = (d) => d ? new Date(d).toLocaleString() : '—';
             <!-- No result yet -->
             <div v-else-if="!error && !code" class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
                 <p class="text-sm text-gray-400">Enter your tracking code above to check your feedback status.</p>
-                <a :href="route('lecture.FeedBack')" class="mt-3 inline-block rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700">
+                <a :href="route('lecture.feedback')" class="mt-3 inline-block rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700">
                     Submit Feedback
                 </a>
             </div>

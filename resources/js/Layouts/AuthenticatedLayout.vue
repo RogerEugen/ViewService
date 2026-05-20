@@ -49,21 +49,21 @@ const showingNavigationDropdown = ref(false);
                                     </div>
                                 </NavLink>
 
-                                <NavLink :href="route('student.Myinfo')" :active="route().current('student.Myinfo')">
+                                <NavLink :href="route('student.myinfo')" :active="route().current('student.myinfo')">
                                     <div class="flex items-center gap-2">
                                         <UserIcon class="w-5 h-5" />
                                         My info
                                     </div>
                                 </NavLink>
-                                <NavLink :href="route('student.FeedBack')"
-                                    :active="route().current('student.FeedBack')">
+                                <NavLink :href="route('student.feedback')"
+                                    :active="route().current('student.feedback')">
                                     <div class="flex items-center gap-2">
                                         <ChatBubbleLeftRightIcon class="w-5 h-5" />
                                         FeedBack
                                     </div>
                                 </NavLink>
-                                <NavLink :href="route('student.feedback.track')"
-                                    :active="route().current('student.feedback.track')">
+                                <NavLink :href="route('student.track')"
+                                    :active="route().current('student.track')">
                                     <div class="flex items-center gap-2">
                                         <DocumentTextIcon class="w-5 h-5" />
                                         My Submission

@@ -24,6 +24,66 @@ class StudentController extends Controller
         ]);
     }
 
+    public function dashboard(): Response
+    {
+        $user = session('user') ?? [];
+        $departmentId = session('department_id')
+            ?? ($user['profile']['department_id'] ?? null);
+        $facultyId = session('faculty_id')
+            ?? ($user['profile']['faculty_id'] ?? null);
+
+        $categories = [];
+        $recentFeedbacks = [];
+        $activeWindow = null;
+
+        try {
+            $catResponse = Http::timeout(5)
+                ->get($this->feedbackApiUrl('categories'), ['role' => 'student']);
+            if ($catResponse->successful()) {
+                $categories = $catResponse->json('categories', []);
+            }
+        } catch (\Exception $e) {
+            $categories = [];
+        }
+
+        if ($departmentId) {
+            try {
+                $recentResponse = Http::timeout(5)
+                    ->get($this->feedbackApiUrl('hod/feedbacks'), [
+                        'department_id' => $departmentId,
+                    ]);
+                if ($recentResponse->successful()) {
+                    $recentFeedbacks = collect($recentResponse->json('feedbacks', []))
+                        ->take(8)
+                        ->values()
+                        ->all();
+                }
+            } catch (\Exception $e) {
+                $recentFeedbacks = [];
+            }
+        }
+
+        try {
+            $windowResponse = Http::timeout(5)
+                ->get($this->feedbackApiUrl('evaluation-windows/active'));
+            if ($windowResponse->successful()) {
+                $activeWindow = $windowResponse->json('window');
+            }
+        } catch (\Exception $e) {
+            $activeWindow = null;
+        }
+
+        return Inertia::render('Student/Dashboard', [
+            'user' => $user,
+            'categories' => $categories,
+            'recentFeedbacks' => $recentFeedbacks,
+            'activeWindow' => $activeWindow,
+            'departmentId' => $departmentId ? (int) $departmentId : null,
+            'facultyId' => $facultyId ? (int) $facultyId : null,
+            'profile' => $user['profile'] ?? [],
+        ]);
+    }
+
     public function FeedBack(): Response
     {
         $response = Http::timeout(5)

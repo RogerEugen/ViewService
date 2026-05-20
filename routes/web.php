@@ -36,8 +36,8 @@ Route::middleware('auth.session')->group(function () {
 
 
 Route::middleware('auth.session')->group(function () {
-    Route::get('/student/dashboard',   fn() => Inertia::render('Student/Dashboard'))->name('student.dashboard');
-    Route::get('/lecturer/dashboard',  fn() => Inertia::render('Lecture/Dashboard'))->name('lecturer.dashboard');
+    Route::get('/student/dashboard',   [StudentController::class, 'dashboard'])->name('student.dashboard');
+    Route::get('/lecturer/dashboard',  [LectureController::class, 'dashboard'])->name('lecturer.dashboard');
     Route::get('/hod/dashboard',       fn() => Inertia::render('Hod/Dashboard'))->name('hod.dashboard');
     Route::get('/dean/dashboard',      fn() => Inertia::render('Dean/Dashboard'))->name('dean.dashboard');
     Route::get('/rector/dashboard',    fn() => Inertia::render('Rector/Dashboard'))->name('rector.dashboard');
@@ -47,11 +47,14 @@ Route::middleware('auth.session')->group(function () {
 
 // Student routes
 Route::middleware(['auth.session', 'student'])->group(function () {
-    Route::get('/student/dashboard',  fn() => Inertia::render('Student/Dashboard'))->name('student.dashboard');
+    Route::get('/student/dashboard',  [StudentController::class, 'dashboard'])->name('student.dashboard');
     Route::get('/student/myinfo',     [StudentController::class, 'MyInfo'])->name('student.Myinfo');
+    Route::get('/student/myinfo',     [StudentController::class, 'MyInfo'])->name('student.myinfo');
     Route::get('/student/feedback',   [StudentController::class, 'FeedBack'])->name('student.FeedBack');
+    Route::get('/student/feedback',   [StudentController::class, 'FeedBack'])->name('student.feedback');
     Route::post('/student/feedback',  [StudentController::class, 'submitFeedback'])->name('student.feedback.submit');
     Route::get('/student/track',      [StudentController::class, 'trackFeedback'])->name('student.feedback.track');
+    Route::get('/student/track',      [StudentController::class, 'trackFeedback'])->name('student.track');
     Route::post('/student/followup',  [StudentController::class, 'sendFollowup'])->name('student.feedback.followup');
 
     Route::get('/student/evaluations',  [StudentController::class, 'evaluations'])->name('student.evaluations');
@@ -60,10 +63,12 @@ Route::middleware(['auth.session', 'student'])->group(function () {
 
 // Lecturer routes
 Route::middleware(['auth.session', 'lecture'])->group(function () {
-    Route::get('/lecturer/dashboard',  fn() => Inertia::render('Lecture/Dashboard'))->name('lecturer.dashboard');
+    Route::get('/lecturer/dashboard',  [LectureController::class, 'dashboard'])->name('lecturer.dashboard');
     Route::get('/lecturer/feedback',   [LectureController::class, 'FeedBack'])->name('lecture.FeedBack');
+    Route::get('/lecturer/feedback',   [LectureController::class, 'FeedBack'])->name('lecture.feedback');
     Route::post('/lecturer/feedback',  [LectureController::class, 'submitFeedback'])->name('lecture.feedback.submit');
     Route::get('/lecturer/track',      [LectureController::class, 'trackFeedback'])->name('lecture.feedback.track');
+    Route::get('/lecturer/track',      [LectureController::class, 'trackFeedback'])->name('lecture.track');
     Route::post('/lecturer/followup',  [LectureController::class, 'sendFollowup'])->name('lecture.feedback.followup');
     Route::get('/lecturer/evaluations', [LectureController::class, 'evaluationResults'])->name('lecture.evaluations');
 });

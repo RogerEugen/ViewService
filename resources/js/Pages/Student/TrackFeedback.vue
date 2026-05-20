@@ -15,7 +15,7 @@ const searchForm = useForm({ code: props.code ?? '' });
 
 const search = () => {
     if (!searchForm.code.trim()) return;
-    window.location.href = route('student.feedback.track') + '?code=' + searchForm.code.trim().toUpperCase();
+    window.location.href = route('student.track') + '?code=' + searchForm.code.trim().toUpperCase();
 };
 
 // Follow-up — include tracking_code in the form
@@ -112,7 +112,7 @@ const canFollowUp = computed(() =>
                 </svg>
                 <p class="text-sm text-gray-500 font-medium">Enter a tracking code to check feedback status</p>
                 <p class="text-xs text-gray-400 mt-1">You received this code when you submitted your feedback</p>
-                <a :href="route('student.FeedBack')"
+                <a :href="route('student.feedback')"
                     class="mt-4 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
                     Submit New Feedback
                 </a>

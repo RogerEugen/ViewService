@@ -232,7 +232,7 @@ const dashOffset  = computed(() =>
                                 <!-- Action buttons -->
                                 <div class="flex gap-2 pt-1">
                                     
-                                    <a    :href="route('student.feedback.track') + '?code=' + trackingCode"
+                                    <a    :href="route('student.track') + '?code=' + trackingCode"
                                         class="flex-1 text-center rounded-xl border border-indigo-200 bg-white px-3 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50"
                                     >
                                         Track Feedback
@@ -278,7 +278,7 @@ const dashOffset  = computed(() =>
                         </p>
                         <div class="mt-2 flex gap-2">
                             
-                            <a    :href="route('student.feedback.track') + '?code=' + trackingCode"
+                            <a    :href="route('student.track') + '?code=' + trackingCode"
                                 class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
                             >Track feedback</a>
                             <button
