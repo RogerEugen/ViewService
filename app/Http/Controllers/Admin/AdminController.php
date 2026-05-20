@@ -502,4 +502,64 @@ class AdminController extends Controller
         return redirect()->route('admin.ManageData')
             ->with('success', "HOD '{$hodName}' created. Login: {$request->email} / Password: {$tempPass}");
     }
+
+    public function analytics(): Response
+{
+    try {
+        $windowsResp  = Http::timeout(5)->get($this->feedbackApiUrl('evaluation-windows'));
+        $windows      = $windowsResp->successful() ? $windowsResp->json('windows', []) : [];
+        $activeWindow = collect($windows)->firstWhere('is_open', true)
+            ?? collect($windows)->firstWhere('is_active', true);
+
+        $overview = $byFaculty = $trends = [];
+
+        if ($activeWindow) {
+            $overviewResp = Http::timeout(5)->get($this->feedbackApiUrl('analytics/overview'), [
+                'window_id' => $activeWindow['id'],
+            ]);
+            $overview = $overviewResp->successful() ? $overviewResp->json('overview', []) : [];
+
+            $facultyResp = Http::timeout(5)->get($this->feedbackApiUrl('analytics/by-faculty'), [
+                'window_id' => $activeWindow['id'],
+            ]);
+            $byFaculty = $facultyResp->successful() ? $facultyResp->json('faculties', []) : [];
+
+            $trendsResp = Http::timeout(5)->get($this->feedbackApiUrl('analytics/trends'), [
+                'window_id' => $activeWindow['id'],
+            ]);
+            $trends = $trendsResp->successful() ? $trendsResp->json('trends', []) : [];
+        }
+
+        $feedbackResp = Http::timeout(5)->get($this->feedbackApiUrl('rector/feedbacks'));
+        $feedbacks    = $feedbackResp->successful() ? $feedbackResp->json('feedbacks', []) : [];
+
+        $faculties   = Http::withHeaders($this->authHeaders())->timeout(5)->get($this->apiUrl('faculties'))->json('faculties', []);
+        $departments = Http::withHeaders($this->authHeaders())->timeout(5)->get($this->apiUrl('departments'))->json('departments', []);
+
+    } catch (\Exception $e) {
+        $windows = $overview = $byFaculty = $trends = $feedbacks = $faculties = $departments = [];
+        $activeWindow = null;
+    }
+
+    $feedbackStats = [
+        'total'        => count($feedbacks),
+        'submitted'    => count(array_filter($feedbacks, fn($f) => $f['status'] === 'submitted')),
+        'under_review' => count(array_filter($feedbacks, fn($f) => $f['status'] === 'under_review')),
+        'escalated'    => count(array_filter($feedbacks, fn($f) => $f['status'] === 'escalated')),
+        'resolved'     => count(array_filter($feedbacks, fn($f) => $f['status'] === 'resolved')),
+        'urgent'       => count(array_filter($feedbacks, fn($f) => $f['priority'] === 'urgent')),
+    ];
+
+    return Inertia::render('Admin/Analytics', [
+        'windows'       => $windows,
+        'activeWindow'  => $activeWindow,
+        'overview'      => $overview,
+        'byFaculty'     => $byFaculty,
+        'trends'        => $trends,
+        'feedbackStats' => $feedbackStats,
+        'faculties'     => $faculties,
+        'departments'   => $departments,
+        'user'          => session('user'),
+    ]);
+}
 }

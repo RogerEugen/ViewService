@@ -22,7 +22,42 @@ class RegistrarController extends Controller
 
     public function dashboard(): Response
     {
-        return Inertia::render('Register/Dashboard');
+        $user = session('user');
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . session('jwt_token'),
+            ])->timeout(5)
+                ->get(config('services.auth_service.url') . '/api/registrar/imports');
+
+            $imports = $response->successful() ? $response->json('imports', []) : [];
+        } catch (\Exception $e) {
+            $imports = [];
+        }
+
+        // Compute stats from import history
+        $studentImports = array_filter($imports, fn($i) => ($i['type'] ?? null) === 'students');
+        $staffImports   = array_filter($imports, fn($i) => ($i['type'] ?? null) === 'staff');
+
+        $totalStudents = array_sum(array_map(fn($i) => $i['success_count'] ?? 0, $studentImports));
+        $totalStaff    = array_sum(array_map(fn($i) => $i['success_count'] ?? 0, $staffImports));
+        $totalFailed   = array_sum(array_map(fn($i) => $i['fail_count'] ?? 0, $imports));
+
+        // Recent 5 imports
+        $recentImports = array_slice($imports, 0, 8);
+
+        return Inertia::render('Register/Dashboard', [
+            'stats' => [
+                'total_imports'  => count($imports),
+                'total_students' => $totalStudents,
+                'total_staff'    => $totalStaff,
+                'total_failed'   => $totalFailed,
+                'student_imports' => count($studentImports),
+                'staff_imports'  => count($staffImports),
+            ],
+            'recentImports' => $recentImports,
+            'user'          => $user,
+        ]);
     }
 
     public function ManageUser(): Response

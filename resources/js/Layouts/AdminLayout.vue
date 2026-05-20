@@ -1,4 +1,11 @@
 <script setup>
+import {
+    HomeIcon,
+    UserIcon,
+    ChatBubbleLeftRightIcon,
+    DocumentTextIcon
+} from '@heroicons/vue/24/outline';
+
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -33,18 +40,20 @@ const showingNavigationDropdown = ref(false);
                             <div
                                 class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
                             >
-                                <NavLink
-                                    :href="route('admin.dashboard')"
-                                    :active="route().current('admin.dashboard')"
-                                >
-                                    Dashboard
+                                 <NavLink :href="route('admin.dashboard')"
+                                    :active="route().current('admin.dashboard')">
+                                    <div class="flex items-center gap-2">
+                                        <HomeIcon class="w-5 h-5" />
+                                        Dashboard
+                                    </div>
                                 </NavLink>
-
                                 <NavLink
                                     :href="route('admin.ManageData')"
-                                    :active="route().current('admin.ManageData')"
-                                >
+                                    :active="route().current('admin.ManageData')">
+                                <div class="flex items-center gap-2">
+                                        <UserIcon class="w-5 h-5" />
                                     Manage Data
+                                </div>    
                                 </NavLink>
                                 
                                  <NavLink
@@ -52,6 +61,12 @@ const showingNavigationDropdown = ref(false);
                                     :active="route().current('admin.evaluation-windows')"
                                 >
                                     Evalution-Window
+                                </NavLink>
+                                <NavLink
+                                    :href="route('admin.analytics')"
+                                    :active="route().current('admin.analytics')"
+                                >
+                                    Analytics
                                 </NavLink>
                             </div>
                         </div>

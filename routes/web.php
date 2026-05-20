@@ -86,6 +86,7 @@ Route::middleware(['auth.session', 'admin'])->prefix('admin')->group(function ()
     Route::post('/evaluation-windows/{id}/toggle', [AdminController::class, 'toggleEvaluationWindow'])->name('admin.evaluation-windows.toggle');
     Route::delete('/evaluation-windows/{id}',  [AdminController::class, 'deleteEvaluationWindow'])->name('admin.evaluation-windows.delete');
     Route::post('/departments/{id}/hod', [AdminController::class, 'storeHod'])->name('admin.departments.hod.store');
+    Route::get('/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
 });
 
 //registrar routes
@@ -122,6 +123,7 @@ Route::middleware(['auth.session', 'rector'])->group(function () {
     Route::get('/rector/feedbacks/{id}',         [RectorController::class, 'show'])->name('rector.feedbacks.show');
     Route::post('/rector/feedbacks/{id}/respond',[RectorController::class, 'respond'])->name('rector.feedbacks.respond');
     Route::post('/rector/feedbacks/{id}/resolve',[RectorController::class, 'resolve'])->name('rector.feedbacks.resolve');
+    Route::get('/rector/analytics', [RectorController::class, 'analytics'])->name('rector.analytics');
 });
 
 Route::middleware('auth')->group(function () {
