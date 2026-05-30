@@ -1,5 +1,5 @@
 <script setup>
-import { HomeIcon, InboxIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, InboxIcon, ChartBarIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -43,9 +43,15 @@ const showingNavigationDropdown = ref(false);
 
                                 <NavLink
                                     :href="route('hod.feedbacks')"
-                                    :active="route().current('hod.feedbacks')"
+                                    :active="route().current('hod.feedbacks') || route().current('hod.feedbacks.show')"
                                 >
                                     <div class="flex items-center gap-2"><InboxIcon class="w-5 h-5" />Feedback Inbox</div>
+                                </NavLink>
+                                <NavLink
+                                    :href="route('hod.evaluations')"
+                                    :active="route().current('hod.evaluations')"
+                                >
+                                    <div class="flex items-center gap-2"><ChartBarIcon class="w-5 h-5" />Course Evaluations</div>
                                 </NavLink>
                                 
                             </div>
@@ -153,7 +159,13 @@ const showingNavigationDropdown = ref(false);
                             :href="route('hod.dashboard')"
                             :active="route().current('hod.dashboard')"
                         >
-                            Dashboard
+                            <div class="flex items-center gap-2"><HomeIcon class="h-4 w-4" />Dashboard</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('hod.feedbacks')" :active="route().current('hod.feedbacks') || route().current('hod.feedbacks.show')">
+                            <div class="flex items-center gap-2"><InboxIcon class="h-4 w-4" />Feedback Inbox</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('hod.evaluations')" :active="route().current('hod.evaluations')">
+                            <div class="flex items-center gap-2"><ChartBarIcon class="h-4 w-4" />Course Evaluations</div>
                         </ResponsiveNavLink>
                     </div>
 
