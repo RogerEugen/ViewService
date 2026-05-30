@@ -170,7 +170,16 @@ const showingNavigationDropdown = ref(false);
                             :href="route('lecturer.dashboard')"
                             :active="route().current('lecturer.dashboard')"
                         >
-                            Dashboard
+                            <div class="flex items-center gap-2"><HomeIcon class="h-4 w-4" />Dashboard</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('lecture.feedback')" :active="route().current('lecture.feedback')">
+                            <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-4 w-4" />Feedback</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('lecture.track')" :active="route().current('lecture.track')">
+                            <div class="flex items-center gap-2"><DocumentTextIcon class="h-4 w-4" />Track Feedback</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('lecture.evaluations')" :active="route().current('lecture.evaluations')">
+                            <div class="flex items-center gap-2"><ChartBarSquareIcon class="h-4 w-4" />Evaluation Results</div>
                         </ResponsiveNavLink>
                     </div>
 
