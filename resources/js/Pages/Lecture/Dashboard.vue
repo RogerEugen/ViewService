@@ -2,6 +2,12 @@
 import LectureLayout from '@/Layouts/LectureLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import {
+    PlusCircleIcon,
+    ChatBubbleLeftRightIcon,
+    ListBulletIcon,
+    ArrowTrendingUpIcon,
+} from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     user:            { type: Object, default: () => ({}) },
@@ -56,9 +62,7 @@ const goToFeedback = () => router.visit(route('lecture.feedback'));
 
                         <div class="rounded-2xl border border-gray-200 bg-white p-6">
                             <h2 class="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <svg class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
+                                <PlusCircleIcon class="h-5 w-5 text-purple-600" />
                                 Feedback Categories
                             </h2>
 
@@ -70,9 +74,7 @@ const goToFeedback = () => router.visit(route('lecture.feedback'));
                                     class="rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:bg-purple-50 transition flex items-start gap-3"
                                 >
                                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-100">
-                                        <svg class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
-                                        </svg>
+                                        <ChatBubbleLeftRightIcon class="h-4 w-4 text-purple-600" />
                                     </div>
                                     <div>
                                         <p class="text-sm font-semibold text-gray-900">{{ cat.name }}</p>
@@ -92,9 +94,7 @@ const goToFeedback = () => router.visit(route('lecture.feedback'));
                         <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
                             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                                 <h2 class="text-base font-bold text-gray-900 flex items-center gap-2">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
-                                    </svg>
+                                    <ListBulletIcon class="h-5 w-5 text-gray-400" />
                                     Recent Submissions <span class="text-xs text-gray-400 font-normal">from your department</span>
                                 </h2>
                                 <button @click="router.visit(route('lecture.track'))" class="text-xs font-semibold text-purple-600 hover:text-purple-700">
@@ -103,7 +103,8 @@ const goToFeedback = () => router.visit(route('lecture.feedback'));
                             </div>
 
                             <div v-if="recentFeedbacks.length === 0" class="px-5 py-10 text-center">
-                                <p class="text-sm text-gray-400">No feedback submissions yet from your department.</p>
+                                <p class="text-sm text-gray-500 font-medium">No lecturer submissions found yet from your department.</p>
+                                <p class="text-xs text-gray-400 mt-1">Once lecturers submit feedback, category and status will appear here.</p>
                             </div>
 
                             <div v-else class="overflow-x-auto">
@@ -119,8 +120,8 @@ const goToFeedback = () => router.visit(route('lecture.feedback'));
                                         <tr v-for="f in recentFeedbacks" :key="f.id" class="hover:bg-gray-50">
                                             <td class="px-5 py-3 text-sm font-medium text-gray-800">{{ f.category ?? 'Unknown' }}</td>
                                             <td class="px-5 py-3">
-                                                <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold" :class="statusColor(f.status)">
-                                                    {{ f.status }}
+                                                <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize" :class="statusColor(f.status)">
+                                                    {{ f.status?.replace('_', ' ') }}
                                                 </span>
                                             </td>
                                             <td class="px-5 py-3 text-xs text-gray-400">{{ formatDate(f.submitted_at) }}</td>
@@ -158,9 +159,7 @@ const goToFeedback = () => router.visit(route('lecture.feedback'));
 
                         <div class="rounded-2xl border border-gray-200 bg-white p-5">
                             <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
-                                <svg class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
-                                </svg>
+                                <ArrowTrendingUpIcon class="h-4 w-4 text-green-600" />
                                 Impact Summary
                             </h3>
                             <p class="text-3xl font-black text-green-600 mt-2">{{ resolvedCount }}</p>
