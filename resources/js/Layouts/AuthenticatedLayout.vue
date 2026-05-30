@@ -182,7 +182,19 @@ const showingNavigationDropdown = ref(false);
                             :href="route('student.dashboard')"
                             :active="route().current('student.dashboard')"
                         >
-                            Dashboard
+                            <div class="flex items-center gap-2"><HomeIcon class="h-4 w-4" />Dashboard</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('student.myinfo')" :active="route().current('student.myinfo')">
+                            <div class="flex items-center gap-2"><UserIcon class="h-4 w-4" />My info</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('student.feedback')" :active="route().current('student.feedback')">
+                            <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-4 w-4" />Feedback</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('student.track')" :active="route().current('student.track')">
+                            <div class="flex items-center gap-2"><DocumentTextIcon class="h-4 w-4" />My Submission</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('student.evaluations')" :active="route().current('student.evaluations')">
+                            <div class="flex items-center gap-2"><DocumentTextIcon class="h-4 w-4" />Evaluation</div>
                         </ResponsiveNavLink>
                     </div>
 
