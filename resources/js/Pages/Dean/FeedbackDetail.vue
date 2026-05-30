@@ -5,6 +5,7 @@ import { ref, computed } from 'vue';
 
 const props = defineProps({
     feedback: { type: Object, default: null },
+    suggestions: { type: Array, default: () => [] },
     user:     { type: Object, default: () => ({}) },
 });
 
@@ -13,6 +14,7 @@ const flash = computed(() => page.props.flash ?? {});
 
 const respondForm  = useForm({ response: '' });
 const escalateForm = useForm({ note: '' });
+const resolveForm = useForm({ resolution: '' });
 const showEscalateModal  = ref(false);
 const showResolveConfirm = ref(false);
 
@@ -32,9 +34,14 @@ const submitEscalate = () => {
 };
 
 const submitResolve = () => {
-    router.post(route('dean.feedbacks.resolve', props.feedback.id), {}, {
+    resolveForm.post(route('dean.feedbacks.resolve', props.feedback.id), {
         onSuccess: () => showResolveConfirm.value = false,
     });
+};
+
+const useSuggestedResolution = (text) => {
+    resolveForm.resolution = text;
+    showResolveConfirm.value = true;
 };
 
 const statusColor = (s) => ({
@@ -71,7 +78,7 @@ const canResolve  = computed(() => !['resolved','closed'].includes(props.feedbac
             </div>
         </template>
 
-        <div class="py-8 px-4 max-w-3xl mx-auto space-y-5">
+        <div class="py-8 px-4 max-w-5xl mx-auto space-y-5">
 
             <div v-if="flash.success" class="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 font-medium">
                 {{ flash.success }}
@@ -189,6 +196,19 @@ const canResolve  = computed(() => !['resolved','closed'].includes(props.feedbac
                 <div class="rounded-xl border border-gray-200 bg-white p-5">
                     <h3 class="text-sm font-semibold text-gray-700 mb-4">Actions</h3>
 
+                    <div v-if="suggestions.length > 0" class="mb-5 rounded-lg border border-purple-100 bg-purple-50 p-3">
+                        <p class="text-xs font-semibold text-purple-800 mb-2">Similar Issues and Suggested Solutions</p>
+                        <div class="space-y-2">
+                            <div v-for="item in suggestions" :key="item.feedback_id" class="rounded border border-purple-100 bg-white p-2">
+                                <p class="text-xs text-gray-500 mb-1">Similarity: {{ (item.similarity_score * 100).toFixed(0) }}%</p>
+                                <p class="text-xs text-gray-700 mb-2">{{ item.resolution }}</p>
+                                <button @click="useSuggestedResolution(item.resolution)" class="rounded border border-purple-200 px-2 py-1 text-xs text-purple-700 hover:bg-purple-50">
+                                    Use this solution
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div v-if="canRespond" class="mb-5">
                         <label class="block text-xs font-medium text-gray-600 mb-1.5">Write a response to the anonymous sender</label>
                         <textarea
@@ -266,6 +286,13 @@ const canResolve  = computed(() => !['resolved','closed'].includes(props.feedbac
                 <p class="text-sm text-gray-500 mb-5">
                     Confirm that this feedback has been fully addressed. The sender will see it as resolved.
                 </p>
+                <textarea
+                    v-model="resolveForm.resolution"
+                    rows="4"
+                    maxlength="2000"
+                    placeholder="Optional: write the solution used (helps auto-suggest for repeated issues)"
+                    class="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                ></textarea>
                 <div class="flex gap-3">
                     <button @click="submitResolve"
                         class="flex-1 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">
