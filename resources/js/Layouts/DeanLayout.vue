@@ -1,5 +1,5 @@
 <script setup>
-import { HomeIcon, InboxIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, InboxIcon, ChartBarIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -43,9 +43,15 @@ const showingNavigationDropdown = ref(false);
 
                                  <NavLink
                                     :href="route('dean.feedbacks')"
-                                    :active="route().current('dean.feedbacks')"
+                                    :active="route().current('dean.feedbacks') || route().current('dean.feedbacks.show')"
                                 >
                                     <div class="flex items-center gap-2"><InboxIcon class="w-5 h-5" />Feedbacks</div>
+                                </NavLink>
+                                <NavLink
+                                    :href="route('dean.evaluations')"
+                                    :active="route().current('dean.evaluations')"
+                                >
+                                    <div class="flex items-center gap-2"><ChartBarIcon class="w-5 h-5" />Course Evaluations</div>
                                 </NavLink>
                             </div>
                         </div>
@@ -152,7 +158,13 @@ const showingNavigationDropdown = ref(false);
                             :href="route('dean.dashboard')"
                             :active="route().current('dean.dashboard')"
                         >
-                            Dashboard
+                            <div class="flex items-center gap-2"><HomeIcon class="h-4 w-4" />Dashboard</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('dean.feedbacks')" :active="route().current('dean.feedbacks') || route().current('dean.feedbacks.show')">
+                            <div class="flex items-center gap-2"><InboxIcon class="h-4 w-4" />Feedbacks</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('dean.evaluations')" :active="route().current('dean.evaluations')">
+                            <div class="flex items-center gap-2"><ChartBarIcon class="h-4 w-4" />Course Evaluations</div>
                         </ResponsiveNavLink>
                     </div>
 
