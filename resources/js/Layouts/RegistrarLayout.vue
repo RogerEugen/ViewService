@@ -152,7 +152,10 @@ const showingNavigationDropdown = ref(false);
                             :href="route('registrar.dashboard')"
                             :active="route().current('registrar.dashboard')"
                         >
-                            Dashboard
+                            <div class="flex items-center gap-2"><HomeIcon class="h-4 w-4" />Dashboard</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('registrar.ManageUser')" :active="route().current('registrar.ManageUser')">
+                            <div class="flex items-center gap-2"><UsersIcon class="h-4 w-4" />Manage Users</div>
                         </ResponsiveNavLink>
                     </div>
 
