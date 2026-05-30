@@ -60,7 +60,7 @@ const canResolve = computed(() => !['resolved','closed'].includes(props.feedback
             </div>
         </template>
 
-        <div class="py-8 px-4 max-w-3xl mx-auto space-y-5">
+        <div class="py-8 px-4 max-w-5xl mx-auto space-y-5">
 
             <div v-if="flash.success" class="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 font-medium">
                 {{ flash.success }}
