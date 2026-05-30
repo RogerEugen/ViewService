@@ -43,6 +43,7 @@ class LectureController extends Controller
                     ]);
                 if ($recentResponse->successful()) {
                     $recentFeedbacks = collect($recentResponse->json('feedbacks', []))
+                        ->where('sender_role', 'lecturer')
                         ->take(8)
                         ->values()
                         ->all();
