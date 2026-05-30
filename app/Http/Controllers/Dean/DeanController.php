@@ -147,8 +147,25 @@ class DeanController extends Controller
             $feedback = null;
         }
 
+        $suggestions = [];
+        if ($feedback && !empty($feedback['content'])) {
+            try {
+                $resp = Http::timeout(10)->post($this->feedbackApiUrl('feedback/suggestions'), [
+                    'content' => $feedback['content'],
+                    'category_id' => $feedback['category_id'] ?? null,
+                    'limit' => 3,
+                ]);
+                if ($resp->successful()) {
+                    $suggestions = $resp->json('suggestions', []);
+                }
+            } catch (\Exception $e) {
+                $suggestions = [];
+            }
+        }
+
         return Inertia::render('Dean/FeedbackDetail', [
             'feedback' => $feedback,
+            'suggestions' => $suggestions,
             'user'     => session('user'),
         ]);
     }
@@ -189,10 +206,13 @@ class DeanController extends Controller
     }
 
     // ── Resolve ───────────────────────────────────────────────
-    public function resolve(int $id): RedirectResponse
+    public function resolve(Request $request, int $id): RedirectResponse
     {
         try {
-            Http::timeout(10)->post($this->feedbackApiUrl("dean/feedbacks/{$id}/resolve"));
+            Http::timeout(10)->post($this->feedbackApiUrl("dean/feedbacks/{$id}/resolve"), [
+                'responder_role' => 'dean',
+                'resolution' => $request->input('resolution'),
+            ]);
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Service unavailable.']);
         }
