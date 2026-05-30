@@ -70,7 +70,7 @@ const windowStatus = (w) => {
             </div>
         </template>
 
-        <div class="py-8 px-4 max-w-5xl mx-auto space-y-6">
+        <div class="py-8 px-4 max-w-6xl mx-auto space-y-6">
 
             <!-- Flash -->
             <div v-if="flash.success" class="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 font-medium flex gap-2">
