@@ -71,7 +71,7 @@ const escalationTrail = computed(() => {
             </div>
         </template>
 
-        <div class="py-8 px-4 max-w-3xl mx-auto space-y-5">
+        <div class="py-8 px-4 max-w-5xl mx-auto space-y-5">
 
             <div v-if="flash.success" class="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 font-medium flex items-center gap-2">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
