@@ -179,7 +179,16 @@ const showingNavigationDropdown = ref(false);
                             :href="route('admin.dashboard')"
                             :active="route().current('admin.dashboard')"
                         >
-                            Dashboard
+                            <div class="flex items-center gap-2"><HomeIcon class="h-4 w-4" />Dashboard</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('admin.ManageData')" :active="route().current('admin.ManageData')">
+                            <div class="flex items-center gap-2"><UserIcon class="h-4 w-4" />Manage Data</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('admin.evaluation-windows')" :active="route().current('admin.evaluation-windows')">
+                            <div class="flex items-center gap-2"><ClipboardDocumentListIcon class="h-4 w-4" />Evaluation Window</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('admin.analytics')" :active="route().current('admin.analytics')">
+                            <div class="flex items-center gap-2"><ChartBarIcon class="h-4 w-4" />Analytics</div>
                         </ResponsiveNavLink>
                     </div>
 
