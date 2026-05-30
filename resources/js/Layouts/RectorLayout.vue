@@ -159,7 +159,13 @@ const showingNavigationDropdown = ref(false);
                             :href="route('rector.dashboard')"
                             :active="route().current('rector.dashboard')"
                         >
-                            Dashboard
+                            <div class="flex items-center gap-2"><HomeIcon class="h-4 w-4" />Dashboard</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('rector.feedbacks')" :active="route().current('rector.feedbacks')">
+                            <div class="flex items-center gap-2"><InboxIcon class="h-4 w-4" />Feedbacks</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('rector.analytics')" :active="route().current('rector.analytics')">
+                            <div class="flex items-center gap-2"><ChartBarIcon class="h-4 w-4" />Analytics</div>
                         </ResponsiveNavLink>
                     </div>
 
