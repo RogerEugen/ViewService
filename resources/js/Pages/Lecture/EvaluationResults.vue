@@ -46,7 +46,7 @@ const gradeLabel = (avg) => {
             <h2 class="text-xl font-semibold text-gray-800">My Course Evaluation Results</h2>
         </template>
 
-        <div class="py-8 px-4 max-w-5xl mx-auto space-y-6">
+        <div class="py-8 px-4 max-w-6xl mx-auto space-y-6">
 
             <!-- Active window -->
             <div v-if="activeWindow" class="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-4 text-white">
