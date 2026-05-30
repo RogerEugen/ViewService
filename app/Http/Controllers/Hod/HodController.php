@@ -131,8 +131,25 @@ class HodController extends Controller
             $feedback = null;
         }
 
+        $suggestions = [];
+        if ($feedback && !empty($feedback['content'])) {
+            try {
+                $resp = Http::timeout(10)->post($this->feedbackApiUrl('feedback/suggestions'), [
+                    'content' => $feedback['content'],
+                    'category_id' => $feedback['category_id'] ?? null,
+                    'limit' => 3,
+                ]);
+                if ($resp->successful()) {
+                    $suggestions = $resp->json('suggestions', []);
+                }
+            } catch (\Exception $e) {
+                $suggestions = [];
+            }
+        }
+
         return Inertia::render('Hod/FeedbackDetail', [
             'feedback' => $feedback,
+            'suggestions' => $suggestions,
             'user'     => session('user'),
         ]);
     }
@@ -192,11 +209,14 @@ class HodController extends Controller
     }
 
     // ── Resolve feedback ───────────────────────────────────────
-    public function resolve(int $id): RedirectResponse
+    public function resolve(Request $request, int $id): RedirectResponse
     {
         try {
             Http::timeout(10)
-                ->post($this->feedbackApiUrl("hod/feedbacks/{$id}/resolve"));
+                ->post($this->feedbackApiUrl("hod/feedbacks/{$id}/resolve"), [
+                    'responder_role' => 'hod',
+                    'resolution' => $request->input('resolution'),
+                ]);
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Service unavailable.']);
         }
