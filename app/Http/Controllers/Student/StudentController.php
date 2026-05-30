@@ -290,6 +290,8 @@ class StudentController extends Controller
         'window_id'              => ['required', 'integer'],
         'course_code'            => ['required', 'string', 'max:20'],
         'subject_name'           => ['required', 'string', 'max:150'],
+        'academic_year'          => ['required', 'string', 'max:20'],
+        'semester'               => ['required', 'integer', 'in:1,2'],
         'lecturer_id'            => ['required', 'integer'],
         'lecturer_name'          => ['required', 'string'],
         'teaching_quality'       => ['required', 'integer', 'min:1', 'max:5'],
@@ -344,8 +346,8 @@ class StudentController extends Controller
         }
     }
 
-    $academicYear = $profile['academic_year'] ?? (date('Y') . '/' . (date('Y') + 1));
-    $semester     = $profile['semester'] ?? 1;
+    $academicYear = $request->academic_year ?: ($profile['academic_year'] ?? (date('Y') . '/' . (date('Y') + 1)));
+    $semester     = (int) ($request->semester ?: ($profile['semester'] ?? 1));
 
     Log::info('Evaluation submit', [
         'course_code'   => $request->course_code,

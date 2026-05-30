@@ -119,18 +119,91 @@ class AdminController extends Controller
                 ->get($this->apiUrl('programs'))
                 ->json('programs', []);
 
+            $categories = Http::timeout(5)
+                ->get($this->feedbackApiUrl('categories'), ['include_inactive' => true, 'role' => 'all'])
+                ->json('categories', []);
+
         } catch (\Exception $e) {
             $faculties   = [];
             $departments = [];
             $programs    = [];
+            $categories  = [];
         }
 
         return Inertia::render('Admin/ManageData', [
             'faculties'   => $faculties,
             'departments' => $departments,
             'programs'    => $programs,
+            'categories'  => $categories,
             'user'        => session('user'),
         ]);
+    }
+
+    public function storeCategory(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'routes_to' => ['required', 'in:hod,dean,rector,admin'],
+            'sender_role' => ['required', 'in:student,lecturer,any'],
+            'description' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        try {
+            $response = Http::timeout(10)->post($this->feedbackApiUrl('categories'), $request->only([
+                'name', 'routes_to', 'sender_role', 'description',
+            ]));
+        } catch (\Exception $e) {
+            return back()->withErrors(['category' => 'Feedback service unavailable.']);
+        }
+
+        if (!$response->successful()) {
+            return back()->withErrors($response->json('errors', ['category' => 'Failed to create category.']));
+        }
+
+        return redirect()->route('admin.ManageData', ['tab' => 'categories'])
+            ->with('success', 'Feedback category created successfully.');
+    }
+
+    public function updateCategory(Request $request, int $id): RedirectResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'routes_to' => ['required', 'in:hod,dean,rector,admin'],
+            'sender_role' => ['required', 'in:student,lecturer,any'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        try {
+            $response = Http::timeout(10)->put($this->feedbackApiUrl("categories/{$id}"), $request->only([
+                'name', 'routes_to', 'sender_role', 'description', 'is_active',
+            ]));
+        } catch (\Exception $e) {
+            return back()->withErrors(['category' => 'Feedback service unavailable.']);
+        }
+
+        if (!$response->successful()) {
+            return back()->withErrors($response->json('errors', ['category' => 'Failed to update category.']));
+        }
+
+        return redirect()->route('admin.ManageData', ['tab' => 'categories'])
+            ->with('success', 'Feedback category updated successfully.');
+    }
+
+    public function deleteCategory(int $id): RedirectResponse
+    {
+        try {
+            $response = Http::timeout(10)->delete($this->feedbackApiUrl("categories/{$id}"));
+        } catch (\Exception $e) {
+            return back()->withErrors(['category' => 'Feedback service unavailable.']);
+        }
+
+        if (!$response->successful()) {
+            return back()->withErrors(['category' => $response->json('message', 'Failed to delete category.')]);
+        }
+
+        return redirect()->route('admin.ManageData', ['tab' => 'categories'])
+            ->with('success', $response->json('message', 'Feedback category removed.'));
     }
 
     // ─────────────────────────────────────────────
@@ -294,8 +367,25 @@ class AdminController extends Controller
             $feedback = null;
         }
 
+        $suggestions = [];
+        if ($feedback && !empty($feedback['content'])) {
+            try {
+                $resp = Http::timeout(10)->post($this->feedbackApiUrl('feedback/suggestions'), [
+                    'content' => $feedback['content'],
+                    'category_id' => $feedback['category_id'] ?? null,
+                    'limit' => 3,
+                ]);
+                if ($resp->successful()) {
+                    $suggestions = $resp->json('suggestions', []);
+                }
+            } catch (\Exception $e) {
+                $suggestions = [];
+            }
+        }
+
         return Inertia::render('Admin/FeedbackDetail', [
             'feedback' => $feedback,
+            'suggestions' => $suggestions,
             'user'     => session('user'),
         ]);
     }
@@ -327,9 +417,13 @@ class AdminController extends Controller
     // ─────────────────────────────────────────────
     public function resolveFeedback(int $id): RedirectResponse
     {
+        $resolution = request('resolution');
         try {
             Http::timeout(10)
-                ->post($this->feedbackApiUrl("rector/feedbacks/{$id}/resolve"));
+                ->post($this->feedbackApiUrl("rector/feedbacks/{$id}/resolve"), [
+                    'responder_role' => 'admin',
+                    'resolution' => $resolution,
+                ]);
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Service unavailable.']);
         }

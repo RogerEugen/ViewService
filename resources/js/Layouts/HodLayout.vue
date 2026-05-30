@@ -1,4 +1,5 @@
 <script setup>
+import { HomeIcon, InboxIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -37,14 +38,14 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('hod.dashboard')"
                                     :active="route().current('hod.dashboard')"
                                 >
-                                    Dashboard
+                                    <div class="flex items-center gap-2"><HomeIcon class="w-5 h-5" />Dashboard</div>
                                 </NavLink>
 
                                 <NavLink
                                     :href="route('hod.feedbacks')"
                                     :active="route().current('hod.feedbacks')"
                                 >
-                                    Feedback Inbox
+                                    <div class="flex items-center gap-2"><InboxIcon class="w-5 h-5" />Feedback Inbox</div>
                                 </NavLink>
                                 
                             </div>

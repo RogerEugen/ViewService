@@ -1,4 +1,5 @@
 <script setup>
+import { HomeIcon, UsersIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -37,14 +38,14 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('registrar.dashboard')"
                                     :active="route().current('registrar.dashboard')"
                                 >
-                                    Dashboard
+                                    <div class="flex items-center gap-2"><HomeIcon class="w-5 h-5" />Dashboard</div>
                                 </NavLink>
 
                                 <NavLink
                                     :href="route('registrar.ManageUser')"
                                     :active="route().current('registrar.ManageUser')"
                                 >
-                                    Manage Users
+                                    <div class="flex items-center gap-2"><UsersIcon class="w-5 h-5" />Manage Users</div>
                                 </NavLink>
                             </div>
                         </div>

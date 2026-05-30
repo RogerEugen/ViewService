@@ -1,4 +1,5 @@
 <script setup>
+import { HomeIcon, InboxIcon, ChartBarIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -37,20 +38,20 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('rector.dashboard')"
                                     :active="route().current('rector.dashboard')"
                                 >
-                                    Dashboard
+                                    <div class="flex items-center gap-2"><HomeIcon class="w-5 h-5" />Dashboard</div>
                                 </NavLink>
 
                                 <NavLink
                                     :href="route('rector.feedbacks')"
                                     :active="route().current('rector.feedbacks')"
                                 >
-                                    Feedbacks
+                                    <div class="flex items-center gap-2"><InboxIcon class="w-5 h-5" />Feedbacks</div>
                                 </NavLink>
                                 <NavLink
                                     :href="route('rector.analytics')"
                                     :active="route().current('rector.analytics')"
                                 >
-                                    Analytics
+                                    <div class="flex items-center gap-2"><ChartBarIcon class="w-5 h-5" />Analytics</div>
                                 </NavLink>
 
                             </div>

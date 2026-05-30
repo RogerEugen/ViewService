@@ -2,8 +2,8 @@
 import {
     HomeIcon,
     UserIcon,
-    ChatBubbleLeftRightIcon,
-    DocumentTextIcon
+    ChartBarIcon,
+    ClipboardDocumentListIcon
 } from '@heroicons/vue/24/outline';
 
 import { ref } from 'vue';
@@ -56,17 +56,23 @@ const showingNavigationDropdown = ref(false);
                                 </div>    
                                 </NavLink>
                                 
-                                 <NavLink
+                                <NavLink
                                     :href="route('admin.evaluation-windows')"
                                     :active="route().current('admin.evaluation-windows')"
                                 >
-                                    Evalution-Window
+                                    <div class="flex items-center gap-2">
+                                        <ClipboardDocumentListIcon class="w-5 h-5" />
+                                        Evalution-Window
+                                    </div>
                                 </NavLink>
                                 <NavLink
                                     :href="route('admin.analytics')"
                                     :active="route().current('admin.analytics')"
                                 >
-                                    Analytics
+                                    <div class="flex items-center gap-2">
+                                        <ChartBarIcon class="w-5 h-5" />
+                                        Analytics
+                                    </div>
                                 </NavLink>
                             </div>
                         </div>

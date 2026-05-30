@@ -7,6 +7,7 @@ const props = defineProps({
     faculties:   { type: Array, default: () => [] },
     departments: { type: Array, default: () => [] },
     programs:    { type: Array, default: () => [] },
+    categories:  { type: Array, default: () => [] },
     user:        { type: Object, default: () => ({}) },
 });
 
@@ -22,6 +23,12 @@ const deptForm    = useForm({ name: '', code: '', faculty_id: '' });
 const programForm = useForm({
     name: '', code: '', department_id: '',
     level: 'degree', duration_years: 3,
+});
+const categoryForm = useForm({
+    name: '', routes_to: 'hod', sender_role: 'student', description: '',
+});
+const editCategoryForm = useForm({
+    id: '', name: '', routes_to: 'hod', sender_role: 'student', description: '', is_active: true,
 });
 
 // ── HOD form ──────────────────────────────────────────────────
@@ -114,6 +121,27 @@ const submitProgram = () => {
         onSuccess: () => programForm.reset(),
     });
 };
+const submitCategory = () => {
+    categoryForm.post(route('admin.categories.store'), {
+        onSuccess: () => categoryForm.reset('name', 'description'),
+    });
+};
+const openEditCategory = (cat) => {
+    editCategoryForm.id = cat.id;
+    editCategoryForm.name = cat.name;
+    editCategoryForm.routes_to = cat.routes_to;
+    editCategoryForm.sender_role = cat.sender_role;
+    editCategoryForm.description = cat.description ?? '';
+    editCategoryForm.is_active = !!cat.is_active;
+};
+const updateCategory = () => {
+    editCategoryForm.put(route('admin.categories.update', editCategoryForm.id));
+};
+const deleteCategory = (id) => {
+    if (confirm('Delete/deactivate this category?')) {
+        router.delete(route('admin.categories.delete', id));
+    }
+};
 
 // ── Helpers ───────────────────────────────────────────────────
 const getFacultyName  = (id) => props.faculties.find(f => f.id == id)?.name ?? '—';
@@ -160,6 +188,7 @@ const facultiesWithDean    = computed(() => props.faculties.filter(f => f.dean_u
                             { key: 'faculties',   label: 'Faculties',   count: faculties.length },
                             { key: 'departments', label: 'Departments', count: departments.length },
                             { key: 'programs',    label: 'Programs',    count: programs.length },
+                            { key: 'categories',  label: 'Feedback Categories', count: categories.length },
                             { key: 'hods',        label: 'HOD Management', count: deptsWithoutHod.length, badge: true },
                             { key: 'deans',       label: 'Dean Management', count: facultiesWithoutDean.length, badge: true },
                         ]"
@@ -412,6 +441,62 @@ const facultiesWithDean    = computed(() => props.faculties.filter(f => f.dean_u
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="activeTab === 'categories'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+                    <h3 class="text-sm font-semibold text-gray-800">Create Feedback Category</h3>
+                    <form @submit.prevent="submitCategory" class="space-y-3">
+                        <input v-model="categoryForm.name" type="text" placeholder="Category name"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" required />
+                        <div class="grid grid-cols-2 gap-3">
+                            <select v-model="categoryForm.sender_role" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white">
+                                <option value="student">Student</option>
+                                <option value="lecturer">Lecturer</option>
+                                <option value="any">Any</option>
+                            </select>
+                            <select v-model="categoryForm.routes_to" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white">
+                                <option value="hod">HOD</option>
+                                <option value="dean">Dean</option>
+                                <option value="rector">Rector</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <textarea v-model="categoryForm.description" rows="3" placeholder="Description (optional)"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"></textarea>
+                        <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">Save Category</button>
+                    </form>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+                    <h3 class="text-sm font-semibold text-gray-800">Manage Categories</h3>
+                    <div class="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+                        <div v-for="cat in categories" :key="cat.id" class="rounded-lg border border-gray-200 p-3 space-y-2">
+                            <input v-model="editCategoryForm.name" v-if="editCategoryForm.id === cat.id" class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm" />
+                            <p v-else class="text-sm font-semibold text-gray-800">{{ cat.name }}</p>
+                            <p class="text-xs text-gray-500">{{ cat.description || 'No description' }}</p>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="rounded-full bg-gray-100 px-2 py-0.5">{{ cat.sender_role }}</span>
+                                <span class="rounded-full bg-blue-100 text-blue-700 px-2 py-0.5">{{ cat.routes_to }}</span>
+                                <span class="rounded-full px-2 py-0.5" :class="cat.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+                                    {{ cat.is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-600">
+                                From: <span class="font-semibold capitalize">{{ cat.sender_role }}</span>
+                                →
+                                To: <span class="font-semibold uppercase">{{ cat.routes_to }}</span>
+                            </p>
+                            <div class="flex gap-2">
+                                <button v-if="editCategoryForm.id !== cat.id" @click="openEditCategory(cat)" class="rounded border border-gray-200 px-2 py-1 text-xs">Edit</button>
+                                <template v-else>
+                                    <button @click="updateCategory" class="rounded bg-indigo-600 text-white px-2 py-1 text-xs">Update</button>
+                                    <button @click="editCategoryForm.id=''" class="rounded border border-gray-200 px-2 py-1 text-xs">Cancel</button>
+                                </template>
+                                <button @click="deleteCategory(cat.id)" class="rounded border border-red-200 text-red-600 px-2 py-1 text-xs">Delete/Deactivate</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

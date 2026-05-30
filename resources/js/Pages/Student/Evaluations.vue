@@ -28,11 +28,14 @@ watch(flash, (f) => {
 }, { deep: true });
 
 const showForm = ref(false);
+const lecturerSearch = ref('');
 
 const form = useForm({
     window_id:              props.window?.id ?? '',
     course_code:            '',
     subject_name:           '',
+    academic_year:          props.academic_year || props.window?.academic_year || '',
+    semester:               Number(props.semester || props.window?.semester || 1),
     lecturer_id:            '',
     lecturer_name:          '',
     teaching_quality:       0,
@@ -47,6 +50,8 @@ const form = useForm({
 const startNewEvaluation = () => {
     form.reset();
     form.window_id = props.window?.id ?? '';
+    form.academic_year = props.academic_year || props.window?.academic_year || '';
+    form.semester = Number(props.semester || props.window?.semester || 1);
     showForm.value = true;
 };
 
@@ -55,10 +60,17 @@ const cancelForm = () => {
     form.reset();
 };
 
-const selectLecturer = (lecturer) => {
-    form.lecturer_id   = parseInt(lecturer.id);
-    form.lecturer_name = lecturer.name;
-};
+const filteredLecturers = computed(() => {
+    const q = lecturerSearch.value.trim().toLowerCase();
+    if (!q) {
+        return props.lecturers;
+    }
+    return props.lecturers.filter((lec) => {
+        const name = String(lec.name ?? '').toLowerCase();
+        const staff = String(lec.staff_number ?? '').toLowerCase();
+        return name.includes(q) || staff.includes(q);
+    });
+});
 
 const submitEval = () => {
     form.post(route('student.evaluations.submit'), {
@@ -67,6 +79,8 @@ const submitEval = () => {
             showForm.value = false;
             form.reset();
             form.window_id = props.window?.id ?? '';
+            form.academic_year = props.academic_year || props.window?.academic_year || '';
+            form.semester = Number(props.semester || props.window?.semester || 1);
         },
     });
 };
@@ -85,6 +99,8 @@ const starLabel = (n) => ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][
 const isFormComplete = computed(() =>
     form.course_code.trim() !== '' &&
     form.subject_name.trim() !== '' &&
+    form.academic_year.trim() !== '' &&
+    [1,2].includes(Number(form.semester)) &&
     form.lecturer_id !== '' &&
     criteria.every(c => form[c.key] > 0)
 );
@@ -103,6 +119,10 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', {
 const selectedLecturerObj = computed(() =>
     props.lecturers.find(l => l.id === form.lecturer_id || l.id == form.lecturer_id)
 );
+
+watch(() => form.lecturer_id, () => {
+    form.lecturer_name = selectedLecturerObj.value?.name ?? '';
+});
 </script>
 
 <template>
@@ -112,7 +132,7 @@ const selectedLecturerObj = computed(() =>
             <h2 class="text-xl font-semibold text-gray-800">Course Evaluations</h2>
         </template>
 
-        <div class="py-8 px-4 max-w-3xl mx-auto space-y-5">
+        <div class="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-4">
 
             <!-- ✅ Success flash — uses flash directly like other pages -->
             <div v-if="flash.eval_success"
@@ -219,7 +239,8 @@ const selectedLecturerObj = computed(() =>
                         </button>
                     </div>
 
-                    <div class="px-5 py-5 space-y-6">
+                    <div class="px-4 sm:px-5 py-5 lg:grid lg:grid-cols-3 lg:gap-6">
+                        <div class="space-y-6 lg:col-span-2">
 
                         <!-- Form error -->
                         <div v-if="form.errors.error" class="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700">
@@ -233,6 +254,20 @@ const selectedLecturerObj = computed(() =>
                                 <h4 class="text-sm font-semibold text-gray-800">Course Details</h4>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Academic Year <span class="text-red-500">*</span></label>
+                                    <input v-model="form.academic_year" type="text" placeholder="e.g. 2025/2026"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"/>
+                                    <p v-if="form.errors.academic_year" class="mt-1 text-xs text-red-500">{{ form.errors.academic_year }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Semester <span class="text-red-500">*</span></label>
+                                    <select v-model="form.semester" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white">
+                                        <option :value="1">Semester 1</option>
+                                        <option :value="2">Semester 2</option>
+                                    </select>
+                                    <p v-if="form.errors.semester" class="mt-1 text-xs text-red-500">{{ form.errors.semester }}</p>
+                                </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1.5">Course Code <span class="text-red-500">*</span></label>
                                     <input v-model="form.course_code" type="text" placeholder="e.g. ITU 08207"
@@ -255,33 +290,16 @@ const selectedLecturerObj = computed(() =>
                                 <div v-if="lecturers.length === 0" class="rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2.5 text-xs text-yellow-700">
                                     No lecturers found for your department.
                                 </div>
-                                <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <button v-for="lec in lecturers" :key="lec.id" type="button"
-                                        @click="selectLecturer(lec)"
-                                        class="flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition"
-                                        :class="form.lecturer_id == lec.id
-                                            ? 'border-indigo-500 bg-indigo-50'
-                                            : 'border-gray-200 bg-white hover:border-indigo-200'">
-                                        <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
-                                            :class="form.lecturer_id == lec.id ? 'bg-indigo-600' : 'bg-gray-100'">
-                                            <span class="text-sm font-bold"
-                                                :class="form.lecturer_id == lec.id ? 'text-white' : 'text-gray-600'">
-                                                {{ lec.name.charAt(0) }}
-                                            </span>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-semibold truncate"
-                                                :class="form.lecturer_id == lec.id ? 'text-indigo-800' : 'text-gray-800'">
-                                                {{ lec.name }}
-                                            </p>
-                                            <p class="text-xs text-gray-400">{{ lec.staff_number ?? 'Lecturer' }}</p>
-                                        </div>
-                                        <svg v-if="form.lecturer_id == lec.id"
-                                            class="h-4 w-4 text-indigo-600 ml-auto flex-shrink-0"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    </button>
+                                <div v-else class="space-y-2">
+                                    <input v-model="lecturerSearch" type="text" placeholder="Search lecturer by name or staff number"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                                    <select v-model="form.lecturer_id"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                                        <option value="">Select lecturer...</option>
+                                        <option v-for="lec in filteredLecturers" :key="lec.id" :value="lec.id">
+                                            {{ lec.name }}{{ lec.staff_number ? ` (${lec.staff_number})` : '' }}
+                                        </option>
+                                    </select>
                                 </div>
                                 <div v-if="selectedLecturerObj" class="mt-2 rounded-lg bg-indigo-50 border border-indigo-100 px-3 py-2 text-xs text-indigo-700">
                                     Evaluating: <strong>{{ selectedLecturerObj.name }}</strong>
@@ -351,7 +369,10 @@ const selectedLecturerObj = computed(() =>
                             <p class="text-right text-xs text-gray-400">{{ form.comments.length }}/2000</p>
                         </div>
 
-                        <!-- Rating Summary -->
+                        </div>
+
+                        <div class="mt-6 lg:mt-0 lg:col-span-1">
+                        <div class="lg:sticky lg:top-24 space-y-4">
                         <div class="rounded-xl bg-gray-50 border border-gray-100 px-4 py-4">
                             <div class="flex items-center justify-between mb-3">
                                 <p class="text-xs font-semibold text-gray-600">Rating Summary</p>
@@ -389,7 +410,8 @@ const selectedLecturerObj = computed(() =>
                             <span v-else>Submit Evaluation Anonymously</span>
                         </button>
                         <p class="text-center text-xs text-gray-400">After submitting you can evaluate another course.</p>
-
+                        </div>
+                        </div>
                     </div>
                 </div>
 

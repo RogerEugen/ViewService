@@ -1,4 +1,10 @@
 <script setup>
+import {
+    HomeIcon,
+    ChatBubbleLeftRightIcon,
+    DocumentTextIcon,
+    ChartBarSquareIcon
+} from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -37,27 +43,27 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('lecturer.dashboard')"
                                     :active="route().current('lecturer.dashboard')"
                                 >
-                                    Dashboard
+                                    <div class="flex items-center gap-2"><HomeIcon class="w-5 h-5" />Dashboard</div>
                                 </NavLink>
                                 <NavLink
                                     :href="route('lecture.feedback')"
                                     :active="route().current('lecture.feedback')"
                                 >
-                                    FeedBack
+                                    <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="w-5 h-5" />FeedBack</div>
                                 </NavLink>
 
                                 <NavLink
                                     :href="route('lecture.track')"
                                     :active="route().current('lecture.track')"
                                 >
-                                    Track Feedback
+                                    <div class="flex items-center gap-2"><DocumentTextIcon class="w-5 h-5" />Track Feedback</div>
                                 </NavLink>
 
                                 <NavLink
                                     :href="route('lecture.evaluations')"
                                     :active="route().current('lecture.evaluations')"
                                 >
-                                    Evaluation Results
+                                    <div class="flex items-center gap-2"><ChartBarSquareIcon class="w-5 h-5" />Evaluation Results</div>
                                  </NavLink>
                             </div>
                         </div>
