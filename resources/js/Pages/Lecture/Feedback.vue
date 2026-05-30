@@ -59,7 +59,7 @@ const selectedCategory = computed(() =>
             <h2 class="text-xl font-semibold text-gray-800">Submit Feedback</h2>
         </template>
 
-        <div class="py-8 px-4 max-w-2xl mx-auto">
+        <div class="py-8 px-4 max-w-7xl mx-auto">
 
             <!-- ── SUCCESS STATE ── -->
             <div v-if="submitted && trackingCode" class="space-y-4">
@@ -122,7 +122,8 @@ const selectedCategory = computed(() =>
             </div>
 
             <!-- ── FEEDBACK FORM ── -->
-            <div v-else class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
 
                 <div class="border-b border-gray-100 px-6 py-4 flex items-center gap-3">
                     <div class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
@@ -228,6 +229,27 @@ const selectedCategory = computed(() =>
 
                     </form>
                 </div>
+            </div>
+            <aside class="space-y-4">
+                <div class="rounded-2xl border border-purple-200 bg-purple-50 p-4">
+                    <h4 class="text-sm font-bold text-purple-800 mb-1">Lecturer Privacy</h4>
+                    <p class="text-xs text-purple-700">Feedback yako ni anonymous kabisa na inapelekwa moja kwa moja kwa Rector.</p>
+                </div>
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                    <h4 class="text-sm font-bold text-amber-800 mb-1">Write Useful Feedback</h4>
+                    <ul class="text-xs text-amber-700 space-y-1">
+                        <li>• Taja tatizo halisi na impact yake.</li>
+                        <li>• Toa pendekezo la suluhisho.</li>
+                        <li>• Epuka kuweka data binafsi.</li>
+                    </ul>
+                </div>
+                <div class="rounded-2xl border border-gray-200 bg-white p-4">
+                    <h4 class="text-sm font-bold text-gray-800 mb-2">Category Tips</h4>
+                    <p class="text-xs text-gray-600">Department Management: leadership/workflow issues.</p>
+                    <p class="text-xs text-gray-600 mt-1">Resources & Facilities: vifaa, maabara, mazingira ya kufundishia.</p>
+                    <p class="text-xs text-gray-600 mt-1">General Suggestion: maboresho ya mfumo kwa ujumla.</p>
+                </div>
+            </aside>
             </div>
 
         </div>
