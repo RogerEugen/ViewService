@@ -1,7 +1,7 @@
 <script setup>
 import LectureLayout from '@/Layouts/LectureLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
     feedback: { type: Object, default: null },
@@ -47,6 +47,18 @@ const priorityColor = (p) => ({
 }[p] ?? 'bg-gray-100 text-gray-600');
 
 const formatDate = (d) => d ? new Date(d).toLocaleString() : '—';
+
+const statusSteps = computed(() => {
+    const current = props.feedback?.status ?? 'submitted';
+    const order = ['submitted', 'under_review', 'escalated', 'resolved'];
+    const currentIndex = Math.max(order.indexOf(current), 0);
+    return [
+        { key: 'submitted', label: 'Submitted', done: currentIndex >= 0 },
+        { key: 'under_review', label: 'Under Review', done: currentIndex >= 1 || current === 'closed' },
+        { key: 'escalated', label: 'Escalated (if needed)', done: currentIndex >= 2 || current === 'resolved' || current === 'closed' },
+        { key: 'resolved', label: 'Resolved', done: current === 'resolved' || current === 'closed' },
+    ];
+});
 </script>
 
 <template>
@@ -56,7 +68,7 @@ const formatDate = (d) => d ? new Date(d).toLocaleString() : '—';
             <h2 class="text-xl font-semibold text-gray-800">Track Feedback</h2>
         </template>
 
-        <div class="py-8 px-4 max-w-2xl mx-auto space-y-6">
+        <div class="py-8 px-4 max-w-6xl mx-auto space-y-6">
 
             <!-- Search -->
             <div class="rounded-xl border border-gray-200 bg-white p-5">
@@ -135,6 +147,17 @@ const formatDate = (d) => d ? new Date(d).toLocaleString() : '—';
                     </div>
                 </div>
 
+                <div class="rounded-xl border border-gray-200 bg-white p-5">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Progress Timeline</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div v-for="step in statusSteps" :key="step.key"
+                            class="rounded-lg border px-3 py-2 text-center text-xs font-semibold"
+                            :class="step.done ? 'border-green-200 bg-green-50 text-green-700' : 'border-gray-200 bg-gray-50 text-gray-400'">
+                            {{ step.done ? '✓ ' : '' }}{{ step.label }}
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Responses -->
                 <div v-if="feedback.responses?.length > 0" class="rounded-xl border border-gray-200 bg-white p-5">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Responses ({{ feedback.responses.length }})</h3>
@@ -184,11 +207,23 @@ const formatDate = (d) => d ? new Date(d).toLocaleString() : '—';
             </div>
 
             <!-- No result yet -->
-            <div v-else-if="!error && !code" class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
-                <p class="text-sm text-gray-400">Enter your tracking code above to check your feedback status.</p>
-                <a :href="route('lecture.feedback')" class="mt-3 inline-block rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700">
-                    Submit Feedback
-                </a>
+            <div v-else-if="!error && !code" class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div class="lg:col-span-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
+                    <p class="text-sm text-gray-500">Enter your tracking code above to check your feedback status.</p>
+                    <a :href="route('lecture.feedback')" class="mt-3 inline-block rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700">
+                        Submit Feedback
+                    </a>
+                </div>
+                <aside class="space-y-3">
+                    <div class="rounded-xl border border-purple-200 bg-purple-50 p-4">
+                        <h4 class="text-sm font-bold text-purple-800 mb-1">Tracking Help</h4>
+                        <p class="text-xs text-purple-700">Use code format kama <span class="font-mono font-semibold">FB-2026-ABCD</span>.</p>
+                    </div>
+                    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <h4 class="text-sm font-bold text-amber-800 mb-1">Important</h4>
+                        <p class="text-xs text-amber-700">Ukipoteza tracking code huwezi kuipata tena kutokana na anonymity.</p>
+                    </div>
+                </aside>
             </div>
 
         </div>
