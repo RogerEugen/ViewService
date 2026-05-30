@@ -144,6 +144,12 @@ const ratingColor = (v) => {
                                 <span>→</span>
                             </button>
                         </div>
+                        <div class="mt-3 rounded-lg border border-purple-100 bg-purple-50 px-3 py-2.5">
+                            <p class="text-xs font-semibold text-purple-800">Faculty Smart Resolution Assistant</p>
+                            <p class="text-xs text-purple-600 mt-0.5">
+                                Dean anaweza kutumia suluhisho zilizowahi kutatua issue zinazofanana ili kuharakisha maamuzi.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
