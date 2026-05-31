@@ -92,6 +92,27 @@ const selectedCategory = computed(() =>
     props.categories.find(c => c.id == form.category_id)
 );
 
+const selectedCategoryGuide = computed(() => {
+    const name = String(selectedCategory.value?.name ?? '').toLowerCase();
+    const desc = String(selectedCategory.value?.description ?? '').toLowerCase();
+    const text = `${name} ${desc}`;
+
+    if (text.includes('exam')) {
+        return 'Mfano: kuchelewa matokeo ya mtihani, utata wa marks, au ratiba ya mtihani.';
+    }
+    if (text.includes('academic') || text.includes('course')) {
+        return 'Mfano: ufundishaji hauko wazi, content ya somo haitoshi, au mtaala hauendani.';
+    }
+    if (text.includes('harassment') || text.includes('misconduct')) {
+        return 'Mfano: lugha mbaya, vitisho, unyanyasaji, au tabia isiyofaa kwa mwanafunzi.';
+    }
+    if (text.includes('infrastructure') || text.includes('facility')) {
+        return 'Mfano: darasa halifai, viti/vifaa vimeharibika, au huduma za msingi hazifanyi kazi.';
+    }
+
+    return 'Mfano: eleza tatizo kwa ufupi, tukio lilitokea lini/wapi, na athari yake kwako au kwa darasa.';
+});
+
 // SVG circle countdown
 const radius      = 22;
 const circumference = 2 * Math.PI * radius;
@@ -253,7 +274,7 @@ const dashOffset  = computed(() =>
         </teleport>
 
         <!-- ── FEEDBACK FORM ─────────────────────────────────────── -->
-        <div class="py-8 px-4 max-w-2xl mx-auto">
+        <div class="py-8 px-4 max-w-7xl mx-auto">
 
             <!-- Inline success banner (shown after popup closes) -->
             <transition
@@ -295,8 +316,9 @@ const dashOffset  = computed(() =>
                 </div>
             </transition>
 
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Form card -->
-            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div class="lg:col-span-2 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
 
                 <div class="border-b border-gray-100 px-6 py-4 flex items-center gap-3">
                     <div class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100">
@@ -405,6 +427,47 @@ const dashOffset  = computed(() =>
 
                     </form>
                 </div>
+            </div>
+            <aside class="space-y-4">
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                    <h4 class="text-sm font-bold text-emerald-800 mb-1">100% Anonymous Guarantee</h4>
+                    <p class="text-xs text-emerald-700 leading-relaxed">
+                        Feedback yako ni anonymous kwa asilimia 100. Mfumo huu hauhifadhi jina lako, email yako,
+                        registration number yako, wala taarifa yoyote ya kukutambulisha.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                    <h4 class="text-sm font-bold text-amber-800 mb-2">Caution Kabla Ya Kutuma</h4>
+                    <ul class="text-xs text-amber-700 space-y-1.5">
+                        <li>• Usitie jina lako au taarifa binafsi ndani ya maelezo.</li>
+                        <li>• Andika ukweli wa tukio, epuka matusi au lugha ya kuumiza.</li>
+                        <li>• Taja tatizo halisi, eneo, na athari ili usaidizi uwe wa haraka.</li>
+                    </ul>
+                </div>
+
+                <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-4">
+                    <h4 class="text-sm font-bold text-indigo-800 mb-2">Category Guide</h4>
+                    <p class="text-xs text-indigo-700 mb-2">
+                        <span class="font-semibold">Category selected:</span>
+                        <span class="ml-1">{{ selectedCategory?.name || 'None yet' }}</span>
+                    </p>
+                    <p class="text-xs text-indigo-700 leading-relaxed">
+                        {{ selectedCategoryGuide }}
+                    </p>
+                    <p v-if="selectedCategory?.description" class="mt-2 text-xs text-indigo-600">
+                        {{ selectedCategory.description }}
+                    </p>
+                </div>
+
+                <div class="rounded-2xl border border-gray-200 bg-white p-4">
+                    <h4 class="text-sm font-bold text-gray-800 mb-2">Mfano Wa Uandishi Mzuri</h4>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        "Category: Examination Concerns. Midterm ya tarehe 15 May 2026 ilichelewa kuanza kwa saa 2,
+                        na maelekezo hayakuwa wazi. Hii ilisababisha mkanganyiko kwa wanafunzi wengi."
+                    </p>
+                </div>
+            </aside>
             </div>
 
         </div>
