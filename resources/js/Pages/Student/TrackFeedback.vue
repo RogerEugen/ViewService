@@ -62,6 +62,18 @@ const canFollowUp = computed(() =>
     props.feedback &&
     !['resolved', 'closed'].includes(props.feedback.status)
 );
+
+const statusSteps = computed(() => {
+    const current = props.feedback?.status ?? 'submitted';
+    const order = ['submitted', 'under_review', 'escalated', 'resolved'];
+    const currentIndex = Math.max(order.indexOf(current), 0);
+    return [
+        { key: 'submitted', label: 'Submitted', done: currentIndex >= 0 },
+        { key: 'under_review', label: 'Under Review', done: currentIndex >= 1 || current === 'closed' },
+        { key: 'escalated', label: 'Escalated (if needed)', done: currentIndex >= 2 || current === 'resolved' || current === 'closed' },
+        { key: 'resolved', label: 'Resolved', done: current === 'resolved' || current === 'closed' },
+    ];
+});
 </script>
 
 <template>
@@ -71,7 +83,7 @@ const canFollowUp = computed(() =>
             <h2 class="text-xl font-semibold text-gray-800">Track Feedback</h2>
         </template>
 
-        <div class="py-8 px-4 max-w-2xl mx-auto space-y-5">
+        <div class="py-8 px-4 max-w-6xl mx-auto space-y-5">
 
             <!-- Search box -->
             <div class="rounded-xl border border-gray-200 bg-white p-5">
@@ -105,17 +117,38 @@ const canFollowUp = computed(() =>
                 </p>
             </div>
 
-            <!-- No result yet -->
-            <div v-if="!feedback && !error && !code" class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
-                <svg class="mx-auto h-10 w-10 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
-                </svg>
-                <p class="text-sm text-gray-500 font-medium">Enter a tracking code to check feedback status</p>
-                <p class="text-xs text-gray-400 mt-1">You received this code when you submitted your feedback</p>
-                <a :href="route('student.feedback')"
-                    class="mt-4 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
-                    Submit New Feedback
-                </a>
+            <div v-if="!feedback && !error && !code" class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div class="lg:col-span-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
+                    <svg class="mx-auto h-10 w-10 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
+                    </svg>
+                    <p class="text-sm text-gray-500 font-medium">Enter a tracking code to check feedback status</p>
+                    <p class="text-xs text-gray-400 mt-1">You received this code when you submitted your feedback</p>
+                    <a :href="route('student.feedback')"
+                        class="mt-4 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                        Submit New Feedback
+                    </a>
+                </div>
+                <aside class="space-y-3">
+                    <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                        <h4 class="text-sm font-bold text-indigo-800 mb-1">How Tracking Works</h4>
+                        <p class="text-xs text-indigo-700">Code format mfano: <span class="font-mono font-semibold">FB-2026-ABCD</span>.</p>
+                        <p class="text-xs text-indigo-700 mt-1">Tumia code uliyopata baada ya kutuma feedback.</p>
+                    </div>
+                    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <h4 class="text-sm font-bold text-amber-800 mb-1">Important</h4>
+                        <p class="text-xs text-amber-700">Ukipoteza tracking code, mfumo hauwezi kuirejesha kwa sababu ya anonymity.</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                        <h4 class="text-sm font-bold text-gray-800 mb-2">Expected Status Flow</h4>
+                        <ul class="space-y-1.5 text-xs text-gray-600">
+                            <li>1. Submitted</li>
+                            <li>2. Under Review</li>
+                            <li>3. Escalated (if required)</li>
+                            <li>4. Resolved</li>
+                        </ul>
+                    </div>
+                </aside>
             </div>
 
             <!-- Feedback result -->
@@ -161,6 +194,17 @@ const canFollowUp = computed(() =>
                     </div>
                     <div v-if="feedback.status === 'resolved'" class="rounded-lg bg-green-50 border border-green-100 px-3 py-2 text-xs text-green-700">
                         ✓ This feedback has been resolved on {{ formatDate(feedback.resolved_at) }}
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-200 bg-white p-5">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Progress Timeline</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div v-for="step in statusSteps" :key="step.key"
+                            class="rounded-lg border px-3 py-2 text-center text-xs font-semibold"
+                            :class="step.done ? 'border-green-200 bg-green-50 text-green-700' : 'border-gray-200 bg-gray-50 text-gray-400'">
+                            {{ step.done ? '✓ ' : '' }}{{ step.label }}
+                        </div>
                     </div>
                 </div>
 
