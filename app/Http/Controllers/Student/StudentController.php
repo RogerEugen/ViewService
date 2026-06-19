@@ -210,6 +210,10 @@ class StudentController extends Controller
             'role'          => session('user_role'),
         ]);
 
+        if (!TokenService::refreshAnonToken()) {
+            return back()->withErrors(['message' => 'Session expired. Please sign in again.']);
+        }
+
         try {
             $response = Http::timeout(10)
                 ->post($this->feedbackApiUrl('feedback/followup'), [
@@ -218,6 +222,7 @@ class StudentController extends Controller
                     'direction'            => 'sender_to_recipient',
                     'sender_role'          => 'student',
                     'sender_department_id' => session('department_id'),
+                    'anonymous_token'      => session('anonymous_token'),
                 ]);
         } catch (\Exception $e) {
             return back()->withErrors(['message' => 'Service unavailable. Please try again.']);

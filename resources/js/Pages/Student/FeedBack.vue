@@ -98,19 +98,19 @@ const selectedCategoryGuide = computed(() => {
     const text = `${name} ${desc}`;
 
     if (text.includes('exam')) {
-        return 'Mfano: kuchelewa matokeo ya mtihani, utata wa marks, au ratiba ya mtihani.';
+        return 'Example: delayed examination results, unclear marks, or an examination timetable problem.';
     }
     if (text.includes('academic') || text.includes('course')) {
-        return 'Mfano: ufundishaji hauko wazi, content ya somo haitoshi, au mtaala hauendani.';
+        return 'Example: unclear teaching, insufficient course content, or a curriculum alignment concern.';
     }
     if (text.includes('harassment') || text.includes('misconduct')) {
-        return 'Mfano: lugha mbaya, vitisho, unyanyasaji, au tabia isiyofaa kwa mwanafunzi.';
+        return 'Example: inappropriate language, threats, harassment, or other misconduct affecting a student.';
     }
     if (text.includes('infrastructure') || text.includes('facility')) {
-        return 'Mfano: darasa halifai, viti/vifaa vimeharibika, au huduma za msingi hazifanyi kazi.';
+        return 'Example: an unsuitable classroom, damaged furniture or equipment, or unavailable essential services.';
     }
 
-    return 'Mfano: eleza tatizo kwa ufupi, tukio lilitokea lini/wapi, na athari yake kwako au kwa darasa.';
+    return 'Example: briefly describe the issue, when and where it happened, and its impact on you or the class.';
 });
 
 // SVG circle countdown
@@ -328,7 +328,7 @@ const dashOffset  = computed(() =>
                     </div>
                     <div>
                         <h3 class="text-sm font-semibold text-gray-800">Anonymous Feedback</h3>
-                        <p class="text-xs text-gray-400">Your identity will never be revealed</p>
+                        <p class="text-xs text-gray-400">Valid feedback remains anonymous</p>
                     </div>
                 </div>
 
@@ -339,7 +339,7 @@ const dashOffset  = computed(() =>
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <p class="text-xs text-blue-700">
-                            Your identity is completely anonymous. No personal information is stored with this feedback.
+                            Valid feedback is anonymous and stores no personal identity. Repeated abusive-language attempts are blocked and may create a restricted Dean conduct review.
                         </p>
                     </div>
 
@@ -442,7 +442,7 @@ const dashOffset  = computed(() =>
                     <ul class="text-xs text-amber-700 space-y-1.5">
                         <li>• Usitie jina lako au taarifa binafsi ndani ya maelezo.</li>
                         <li>• Andika ukweli wa tukio, epuka matusi au lugha ya kuumiza.</li>
-                        <li>• Taja tatizo halisi, eneo, na athari ili usaidizi uwe wa haraka.</li>
+                        <li>• State the specific issue, location, and impact so it can be addressed quickly.</li>
                     </ul>
                 </div>
 
@@ -461,10 +461,10 @@ const dashOffset  = computed(() =>
                 </div>
 
                 <div class="rounded-2xl border border-gray-200 bg-white p-4">
-                    <h4 class="text-sm font-bold text-gray-800 mb-2">Mfano Wa Uandishi Mzuri</h4>
+                    <h4 class="mb-2 text-sm font-bold text-gray-800">Example of a Helpful Report</h4>
                     <p class="text-xs text-gray-600 leading-relaxed">
-                        "Category: Examination Concerns. Midterm ya tarehe 15 May 2026 ilichelewa kuanza kwa saa 2,
-                        na maelekezo hayakuwa wazi. Hii ilisababisha mkanganyiko kwa wanafunzi wengi."
+                        "Category: Examination Concerns. The midterm scheduled for May 15, 2026 started two hours late,
+                        and the instructions were unclear. This caused confusion for many students."
                     </p>
                 </div>
             </aside>

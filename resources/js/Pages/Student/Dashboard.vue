@@ -311,7 +311,7 @@ const firstName = computed(() => props.user?.first_name ?? props.user?.name?.spl
                                 Anonymous Privacy
                             </h3>
                             <p class="text-xs text-indigo-200 leading-relaxed">
-                                Your feedback is always encrypted and identity-protected by default. No personal information is ever stored with your submission.
+                                Valid feedback is encrypted and identity-protected. Repeated abusive-language attempts are blocked and handled through a separate restricted conduct review.
                             </p>
                             <div class="mt-3 flex items-center gap-2">
                                 <div class="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
