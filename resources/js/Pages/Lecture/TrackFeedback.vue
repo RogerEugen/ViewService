@@ -1,7 +1,8 @@
 <script setup>
 import LectureLayout from '@/Layouts/LectureLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { Head, useForm, router } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { listenToFeedback } from '@/lib/realtime';
 
 const props = defineProps({
     feedback: { type: Object, default: null },
@@ -59,6 +60,14 @@ const statusSteps = computed(() => {
         { key: 'resolved', label: 'Resolved', done: current === 'resolved' || current === 'closed' },
     ];
 });
+
+let stopRealtime = () => {};
+onMounted(() => {
+    stopRealtime = listenToFeedback(props.feedback?.realtime_channel, () => {
+        router.reload({ only: ['feedback'], preserveScroll: true });
+    });
+});
+onUnmounted(() => stopRealtime());
 </script>
 
 <template>
@@ -221,7 +230,7 @@ const statusSteps = computed(() => {
                     </div>
                     <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
                         <h4 class="text-sm font-bold text-amber-800 mb-1">Important</h4>
-                        <p class="text-xs text-amber-700">Ukipoteza tracking code huwezi kuipata tena kutokana na anonymity.</p>
+                        <p class="text-xs text-amber-700">Keep your tracking code safe. It cannot be recovered because the feedback is anonymous.</p>
                     </div>
                 </aside>
             </div>

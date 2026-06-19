@@ -64,7 +64,10 @@ const showingNavigationDropdown = ref(false);
                                     :active="route().current('lecture.evaluations')"
                                 >
                                     <div class="flex items-center gap-2"><ChartBarSquareIcon class="w-5 h-5" />Evaluation Results</div>
-                                 </NavLink>
+                                </NavLink>
+                                <NavLink :href="route('lecture.rector-chat')" :active="route().current('lecture.rector-chat*')">
+                                    <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-5 w-5" />Rector Chat</div>
+                                </NavLink>
                             </div>
                         </div>
 
@@ -180,6 +183,9 @@ const showingNavigationDropdown = ref(false);
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('lecture.evaluations')" :active="route().current('lecture.evaluations')">
                             <div class="flex items-center gap-2"><ChartBarSquareIcon class="h-4 w-4" />Evaluation Results</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('lecture.rector-chat')" :active="route().current('lecture.rector-chat*')">
+                            <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-4 w-4" />Rector Chat</div>
                         </ResponsiveNavLink>
                     </div>
 

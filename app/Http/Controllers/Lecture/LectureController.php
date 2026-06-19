@@ -169,6 +169,10 @@ class LectureController extends Controller
             'message'       => ['required', 'string', 'min:5', 'max:2000'],
         ]);
 
+        if (!TokenService::refreshAnonToken()) {
+            return back()->withErrors(['message' => 'Session expired. Please sign in again.']);
+        }
+
         try {
             $response = Http::timeout(10)
                 ->post($this->feedbackApiUrl('feedback/followup'), [
@@ -177,6 +181,7 @@ class LectureController extends Controller
                     'direction'            => 'sender_to_recipient',
                     'sender_role'          => 'lecturer',
                     'sender_department_id' => session('department_id'),
+                    'anonymous_token'      => session('anonymous_token'),
                 ]);
         } catch (\Exception $e) {
             return back()->withErrors(['message' => 'Service unavailable.']);

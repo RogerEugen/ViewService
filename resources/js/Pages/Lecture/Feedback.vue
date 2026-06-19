@@ -106,7 +106,7 @@ const selectedCategory = computed(() =>
                             <p class="text-xs text-blue-700 font-medium mb-1">What happens next?</p>
                             <ul class="text-xs text-blue-600 space-y-0.5">
                                 <li>• Your feedback has been routed to the Rector</li>
-                                <li>• Your identity remains completely anonymous</li>
+                                <li>• Valid feedback remains anonymous and identity-protected</li>
                                 <li>• Use your tracking code to follow up</li>
                             </ul>
                         </div>
@@ -143,7 +143,7 @@ const selectedCategory = computed(() =>
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <p class="text-xs text-purple-700">
-                            Your identity is completely anonymous. Feedback goes directly to the Rector without revealing who you are.
+                            Valid feedback goes to the Rector without revealing your identity. Repeated abusive-language attempts are blocked and may create a restricted conduct review.
                         </p>
                     </div>
 
@@ -238,8 +238,8 @@ const selectedCategory = computed(() =>
                 <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                     <h4 class="text-sm font-bold text-amber-800 mb-1">Write Useful Feedback</h4>
                     <ul class="text-xs text-amber-700 space-y-1">
-                        <li>• Taja tatizo halisi na impact yake.</li>
-                        <li>• Toa pendekezo la suluhisho.</li>
+                        <li>• Describe the specific issue and its impact.</li>
+                        <li>• Suggest a practical solution where possible.</li>
                         <li>• Epuka kuweka data binafsi.</li>
                     </ul>
                 </div>
@@ -247,7 +247,7 @@ const selectedCategory = computed(() =>
                     <h4 class="text-sm font-bold text-gray-800 mb-2">Category Tips</h4>
                     <p class="text-xs text-gray-600">Department Management: leadership/workflow issues.</p>
                     <p class="text-xs text-gray-600 mt-1">Resources & Facilities: vifaa, maabara, mazingira ya kufundishia.</p>
-                    <p class="text-xs text-gray-600 mt-1">General Suggestion: maboresho ya mfumo kwa ujumla.</p>
+                    <p class="mt-1 text-xs text-gray-600">General Suggestion: improvements to university systems or services.</p>
                 </div>
             </aside>
             </div>
