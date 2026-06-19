@@ -16,6 +16,11 @@ class DeanController extends Controller
         return config('services.feedback_service.url') . '/api/' . $path;
     }
 
+    private function authClient()
+    {
+        return Http::withToken((string) session('jwt_token'))->timeout(10);
+    }
+
     // ✅ SINGLE source of truth for faculty_id
     private function getFacultyId(): ?int
     {
@@ -92,6 +97,17 @@ class DeanController extends Controller
             'urgent'       => count(array_filter($feedbacks, fn($f) => $f['priority'] === 'urgent')),
         ];
 
+        $conductReviewCount = 0;
+        try {
+            $reviewResponse = $this->authClient()
+                ->get(config('services.auth_service.url') . '/api/auth/dean/content-violations');
+            $conductReviewCount = $reviewResponse->successful()
+                ? count($reviewResponse->json('reviews', []))
+                : 0;
+        } catch (\Throwable) {
+            $conductReviewCount = 0;
+        }
+
         $recent = array_values(array_slice(
             array_filter($feedbacks, fn($f) => $f['status'] !== 'resolved'),
             0, 5
@@ -103,7 +119,44 @@ class DeanController extends Controller
             'recent'     => $recent,
             'faculty_id' => $facultyId,
             'user'       => $user,
+            'conductReviewCount' => $conductReviewCount,
         ]);
+    }
+
+    public function conductReviews(): Response
+    {
+        $reviews = [];
+        try {
+            $response = $this->authClient()
+                ->get(config('services.auth_service.url') . '/api/auth/dean/content-violations');
+            if ($response->successful()) {
+                $reviews = $response->json('reviews', []);
+            }
+        } catch (\Throwable) {
+            $reviews = [];
+        }
+
+        return Inertia::render('Dean/ConductReviews', [
+            'reviews' => $reviews,
+            'user' => session('user'),
+        ]);
+    }
+
+    public function markConductReview(int $id): RedirectResponse
+    {
+        try {
+            $response = $this->authClient()->post(
+                config('services.auth_service.url') . "/api/auth/dean/content-violations/{$id}/review"
+            );
+        } catch (\Throwable) {
+            return back()->withErrors(['review' => 'The identity review service is unavailable.']);
+        }
+
+        if (!$response->successful()) {
+            return back()->withErrors(['review' => $response->json('message', 'Review could not be updated.')]);
+        }
+
+        return back()->with('success', 'Conduct review marked as reviewed.');
     }
 
     // ── Feedbacks for THIS dean's faculty only ─────────────────

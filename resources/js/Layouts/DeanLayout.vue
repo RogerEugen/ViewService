@@ -1,5 +1,5 @@
 <script setup>
-import { HomeIcon, InboxIcon, ChartBarIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, InboxIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ShieldExclamationIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -52,6 +52,12 @@ const showingNavigationDropdown = ref(false);
                                     :active="route().current('dean.evaluations')"
                                 >
                                     <div class="flex items-center gap-2"><ChartBarIcon class="w-5 h-5" />Course Evaluations</div>
+                                </NavLink>
+                                <NavLink :href="route('communications.index')" :active="route().current('communications.*')">
+                                    <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-5 w-5" />Communication</div>
+                                </NavLink>
+                                <NavLink :href="route('dean.conduct-reviews')" :active="route().current('dean.conduct-reviews*')">
+                                    <div class="flex items-center gap-2"><ShieldExclamationIcon class="h-5 w-5" />Conduct Reviews</div>
                                 </NavLink>
                             </div>
                         </div>
@@ -165,6 +171,12 @@ const showingNavigationDropdown = ref(false);
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('dean.evaluations')" :active="route().current('dean.evaluations')">
                             <div class="flex items-center gap-2"><ChartBarIcon class="h-4 w-4" />Course Evaluations</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('communications.index')" :active="route().current('communications.*')">
+                            <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-4 w-4" />Communication</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('dean.conduct-reviews')" :active="route().current('dean.conduct-reviews*')">
+                            <div class="flex items-center gap-2"><ShieldExclamationIcon class="h-4 w-4" />Conduct Reviews</div>
                         </ResponsiveNavLink>
                     </div>
 

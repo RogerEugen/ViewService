@@ -2,6 +2,7 @@
 import DeanLayout from '@/Layouts/DeanLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { ArrowRightIcon, ChatBubbleLeftRightIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     stats:      { type: Object, default: () => ({}) },
@@ -9,6 +10,7 @@ const props = defineProps({
     recent:     { type: Array,  default: () => [] },
     faculty_id: { type: Number, default: null },
     user:       { type: Object, default: () => ({}) },
+    conductReviewCount: { type: Number, default: 0 },
 });
 
 const resolutionRate = computed(() => {
@@ -49,7 +51,27 @@ const ratingColor = (v) => {
             </div>
         </template>
 
-        <div class="py-8 px-4 max-w-7xl mx-auto space-y-6">
+        <div class="mx-auto max-w-7xl space-y-6 px-4 py-8">
+            <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-800 p-6 text-white shadow-2xl shadow-indigo-200 sm:p-8">
+                <div class="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-purple-400/20 blur-3xl"></div>
+                <div class="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+                    <div>
+                        <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-indigo-100">
+                            <ShieldCheckIcon class="h-4 w-4" /> Faculty command centre
+                        </div>
+                        <h2 class="max-w-2xl text-2xl font-black tracking-tight sm:text-4xl">Lead the faculty with clear, anonymous insight.</h2>
+                        <p class="mt-3 max-w-2xl text-sm leading-6 text-indigo-100">Review priority feedback, coordinate with HODs, and turn recurring concerns into accountable action.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button @click="router.visit(route('dean.feedbacks'))" class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-indigo-900 shadow-lg">
+                            Open inbox <ArrowRightIcon class="h-4 w-4" />
+                        </button>
+                        <button @click="router.visit(route('communications.index'))" class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white hover:bg-white/20">
+                            <ChatBubbleLeftRightIcon class="h-5 w-5" /> Communication
+                        </button>
+                    </div>
+                </div>
+            </section>
 
             <!-- Stats -->
             <div>
@@ -143,12 +165,15 @@ const ratingColor = (v) => {
                                 <span>Course Evaluation Results</span>
                                 <span>→</span>
                             </button>
+                            <button @click="router.visit(route('dean.conduct-reviews'))"
+                                class="flex w-full items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-left text-xs font-medium text-amber-800 hover:bg-amber-100">
+                                <span>Restricted Conduct Reviews</span>
+                                <span class="rounded-full bg-amber-200 px-2 py-0.5 font-black">{{ conductReviewCount }}</span>
+                            </button>
                         </div>
                         <div class="mt-3 rounded-lg border border-purple-100 bg-purple-50 px-3 py-2.5">
                             <p class="text-xs font-semibold text-purple-800">Faculty Smart Resolution Assistant</p>
-                            <p class="text-xs text-purple-600 mt-0.5">
-                                Dean anaweza kutumia suluhisho zilizowahi kutatua issue zinazofanana ili kuharakisha maamuzi.
-                            </p>
+                            <p class="mt-0.5 text-xs text-purple-600">Reuse successful resolutions from similar cases to make consistent decisions faster.</p>
                         </div>
                     </div>
                 </div>
