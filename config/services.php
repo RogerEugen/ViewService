@@ -42,6 +42,7 @@ return [
 
     'feedback_service' => [
         'url' => env('FEEDBACK_SERVICE_URL', 'http://localhost:8002'),
+        'key' => env('VIEW_SERVICE_KEY'),
     ],
 
 
