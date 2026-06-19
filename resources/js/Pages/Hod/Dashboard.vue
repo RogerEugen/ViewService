@@ -2,202 +2,187 @@
 import HodLayout from '@/Layouts/HodLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import {
+    ArrowRightIcon,
+    ChatBubbleLeftRightIcon,
+    CheckCircleIcon,
+    ClockIcon,
+    ExclamationTriangleIcon,
+    InboxIcon,
+} from '@heroicons/vue/24/outline';
 
 const props = defineProps({
-    stats:     { type: Object, default: () => ({}) },
+    stats: { type: Object, default: () => ({}) },
     evalStats: { type: Object, default: () => ({}) },
-    recent:    { type: Array,  default: () => [] },
-    user:      { type: Object, default: () => ({}) },
+    recent: { type: Array, default: () => [] },
+    user: { type: Object, default: () => ({}) },
 });
 
-const resolutionRate = computed(() => {
-    if (!props.stats.total) return 0;
-    return Math.round((props.stats.resolved / props.stats.total) * 100);
-});
+const resolutionRate = computed(() => props.stats.total
+    ? Math.round((props.stats.resolved / props.stats.total) * 100)
+    : 0);
 
-const statusColor = (s) => ({
-    submitted:    'bg-blue-100 text-blue-700',
-    under_review: 'bg-yellow-100 text-yellow-700',
-    escalated:    'bg-orange-100 text-orange-700',
-    resolved:     'bg-green-100 text-green-700',
-}[s] ?? 'bg-gray-100 text-gray-600');
+const responseScore = computed(() => Math.max(
+    0,
+    100 - Math.round(((props.stats.submitted ?? 0) / Math.max(props.stats.total ?? 0, 1)) * 100),
+));
 
-const priorityColor = (p) => ({
-    low:    'bg-gray-100 text-gray-500',
-    medium: 'bg-blue-100 text-blue-700',
-    high:   'bg-orange-100 text-orange-700',
-    urgent: 'bg-red-100 text-red-700',
-}[p] ?? 'bg-gray-100 text-gray-600');
+const chartBars = computed(() => [
+    { label: 'Total', value: props.stats.total ?? 0, color: 'bg-blue-200' },
+    { label: 'New', value: props.stats.submitted ?? 0, color: 'bg-blue-300' },
+    { label: 'Review', value: props.stats.under_review ?? 0, color: 'bg-blue-400' },
+    { label: 'Resolved', value: props.stats.resolved ?? 0, color: 'bg-blue-600' },
+    { label: 'Urgent', value: props.stats.urgent ?? 0, color: 'bg-rose-300' },
+]);
 
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '—';
+const maxChartValue = computed(() => Math.max(...chartBars.value.map((item) => item.value), 1));
 
-const ratingColor = (v) => {
-    if (v >= 4) return 'text-green-600';
-    if (v >= 3) return 'text-blue-600';
-    if (v >= 2) return 'text-yellow-600';
-    return 'text-red-600';
-};
+const statusClass = (status) => ({
+    submitted: 'bg-amber-50 text-amber-700',
+    under_review: 'bg-blue-50 text-blue-700',
+    escalated: 'bg-orange-50 text-orange-700',
+    resolved: 'bg-emerald-50 text-emerald-700',
+}[status] ?? 'bg-slate-100 text-slate-600');
+
+const priorityClass = (priority) => ({
+    urgent: 'text-rose-600',
+    high: 'text-orange-600',
+    medium: 'text-blue-600',
+    low: 'text-emerald-600',
+}[priority] ?? 'text-slate-500');
+
+const formatDate = (value) => value
+    ? new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
 </script>
 
 <template>
     <HodLayout>
-        <Head title="HOD Dashboard" />
+        <Head title="Departmental Dashboard" />
+
         <template #header>
             <div>
-                <h2 class="text-xl font-semibold text-gray-800">HOD Dashboard</h2>
-                <p class="text-xs text-gray-400 mt-0.5">Welcome back, {{ user?.name }}</p>
+                <h1 class="text-xl font-black text-slate-950">Departmental Dashboard</h1>
+                <p class="mt-1 text-xs text-slate-500">Welcome back, {{ user?.name }}. Here is what needs your attention.</p>
             </div>
         </template>
 
-        <div class="py-8 px-4 max-w-7xl mx-auto space-y-6">
+        <div class="mx-auto max-w-[1500px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+            <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <span class="rounded-xl bg-blue-50 p-2.5 text-blue-600"><InboxIcon class="h-5 w-5" /></span>
+                        <span class="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-600">Live</span>
+                    </div>
+                    <p class="mt-4 text-xs font-medium text-slate-500">Total Feedback</p>
+                    <p class="mt-1 text-2xl font-black text-slate-950">{{ stats.total ?? 0 }}</p>
+                </article>
 
-            <!-- Feedback Stats -->
-            <div>
-                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Feedback Overview</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
-                        <p class="text-2xl font-black text-gray-900">{{ stats.total ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">Total</p>
+                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <span class="rounded-xl bg-amber-50 p-2.5 text-amber-600"><ClockIcon class="h-5 w-5" /></span>
+                        <span class="text-[10px] font-bold text-slate-400">{{ stats.submitted ?? 0 }} new</span>
                     </div>
-                    <div class="rounded-xl border border-blue-100 bg-blue-50 p-4 text-center">
-                        <p class="text-2xl font-black text-blue-700">{{ stats.submitted ?? 0 }}</p>
-                        <p class="text-xs text-blue-500 mt-0.5">New</p>
-                    </div>
-                    <div class="rounded-xl border border-yellow-100 bg-yellow-50 p-4 text-center">
-                        <p class="text-2xl font-black text-yellow-700">{{ stats.under_review ?? 0 }}</p>
-                        <p class="text-xs text-yellow-500 mt-0.5">In Review</p>
-                    </div>
-                    <div class="rounded-xl border border-orange-100 bg-orange-50 p-4 text-center">
-                        <p class="text-2xl font-black text-orange-700">{{ stats.escalated ?? 0 }}</p>
-                        <p class="text-xs text-orange-500 mt-0.5">Escalated</p>
-                    </div>
-                    <div class="rounded-xl border border-green-100 bg-green-50 p-4 text-center">
-                        <p class="text-2xl font-black text-green-700">{{ stats.resolved ?? 0 }}</p>
-                        <p class="text-xs text-green-500 mt-0.5">Resolved</p>
-                    </div>
-                    <div class="rounded-xl border border-red-100 bg-red-50 p-4 text-center">
-                        <p class="text-2xl font-black text-red-700">{{ stats.urgent ?? 0 }}</p>
-                        <p class="text-xs text-red-500 mt-0.5">Urgent</p>
-                    </div>
-                </div>
-            </div>
+                    <p class="mt-4 text-xs font-medium text-slate-500">Response Score</p>
+                    <p class="mt-1 text-2xl font-black text-slate-950">{{ responseScore }}%</p>
+                </article>
 
-            <!-- Two column layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <span class="rounded-xl bg-emerald-50 p-2.5 text-emerald-600"><CheckCircleIcon class="h-5 w-5" /></span>
+                        <span class="text-[10px] font-bold text-emerald-600">{{ stats.resolved ?? 0 }} closed</span>
+                    </div>
+                    <p class="mt-4 text-xs font-medium text-slate-500">Resolution Rate</p>
+                    <p class="mt-1 text-2xl font-black text-slate-950">{{ resolutionRate }}%</p>
+                </article>
 
-                <!-- Left: Resolution + Eval stats -->
-                <div class="space-y-4">
+                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <span class="rounded-xl bg-rose-50 p-2.5 text-rose-600"><ExclamationTriangleIcon class="h-5 w-5" /></span>
+                        <span class="text-[10px] font-bold text-rose-600">Priority</span>
+                    </div>
+                    <p class="mt-4 text-xs font-medium text-slate-500">Urgent Issues</p>
+                    <p class="mt-1 text-2xl font-black text-slate-950">{{ stats.urgent ?? 0 }}</p>
+                </article>
+            </section>
 
-                    <!-- Resolution rate -->
-                    <div class="rounded-xl border border-gray-200 bg-white p-5">
-                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Resolution Rate</h3>
-                        <div class="flex items-end gap-3 mb-3">
-                            <p class="text-4xl font-black text-gray-900">{{ resolutionRate }}%</p>
-                            <p class="text-xs text-gray-400 mb-1.5">of all feedback</p>
+            <section class="grid gap-5 lg:grid-cols-2">
+                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-sm font-black text-slate-900">Feedback Volume</h2>
+                            <p class="mt-1 text-xs text-slate-400">Current department workflow distribution</p>
                         </div>
-                        <div class="h-2.5 w-full rounded-full bg-gray-100 overflow-hidden">
-                            <div class="h-full rounded-full bg-green-500 transition-all duration-700"
-                                :style="{ width: resolutionRate + '%' }"></div>
-                        </div>
-                        <div class="mt-3 flex justify-between text-xs text-gray-400">
-                            <span>0%</span>
-                            <span>Target: 80%</span>
-                            <span>100%</span>
+                        <button class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600" @click="router.visit(route('hod.feedbacks'))">View details</button>
+                    </div>
+                    <div class="mt-8 flex h-52 items-end gap-3">
+                        <div v-for="item in chartBars" :key="item.label" class="flex h-full flex-1 flex-col justify-end">
+                            <span class="mb-2 text-center text-xs font-bold text-slate-700">{{ item.value }}</span>
+                            <div
+                                class="min-h-2 rounded-t-lg transition-all duration-700"
+                                :class="item.color"
+                                :style="{ height: `${Math.max((item.value / maxChartValue) * 100, 4)}%` }"
+                            ></div>
+                            <span class="mt-3 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ item.label }}</span>
                         </div>
                     </div>
+                </article>
 
-                    <!-- Evaluation summary -->
-                    <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-5">
-                        <h3 class="text-sm font-semibold text-indigo-800 mb-4">Course Evaluations</h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-indigo-600">Courses Evaluated</span>
-                                <span class="text-lg font-black text-indigo-800">{{ evalStats.total_courses }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-indigo-600">Total Responses</span>
-                                <span class="text-lg font-black text-indigo-800">{{ evalStats.total_responses }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-indigo-600">Avg Overall Rating</span>
-                                <span class="text-lg font-black" :class="ratingColor(evalStats.avg_overall)">
-                                    {{ evalStats.avg_overall }}/5
-                                </span>
-                            </div>
-                        </div>
-                        <button @click="router.visit(route('hod.evaluations'))"
-                            class="mt-4 w-full rounded-lg bg-indigo-600 py-2 text-xs font-semibold text-white hover:bg-indigo-700">
-                            View Evaluation Results →
-                        </button>
+                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div>
+                        <h2 class="text-sm font-black text-slate-900">Department Performance</h2>
+                        <p class="mt-1 text-xs text-slate-400">Feedback and course evaluation indicators</p>
                     </div>
-
-                    <!-- Quick actions -->
-                    <div class="rounded-xl border border-gray-200 bg-white p-5">
-                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h3>
-                        <div class="space-y-2">
-                            <button @click="router.visit(route('hod.feedbacks'))"
-                                class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 text-left flex items-center justify-between">
-                                <span>View All Feedbacks</span>
-                                <span class="text-gray-400">→</span>
-                            </button>
-                            <button @click="router.visit(route('hod.evaluations'))"
-                                class="w-full rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 text-left flex items-center justify-between">
-                                <span>View Course Evaluations</span>
-                                <span>→</span>
+                    <div class="mt-7 space-y-6">
+                        <div>
+                            <div class="mb-2 flex justify-between text-xs font-semibold"><span class="text-slate-600">Feedback resolved</span><span class="text-blue-600">{{ resolutionRate }}%</span></div>
+                            <div class="h-2 rounded-full bg-slate-100"><div class="h-2 rounded-full bg-blue-600" :style="{ width: `${resolutionRate}%` }"></div></div>
+                        </div>
+                        <div>
+                            <div class="mb-2 flex justify-between text-xs font-semibold"><span class="text-slate-600">Response score</span><span class="text-emerald-600">{{ responseScore }}%</span></div>
+                            <div class="h-2 rounded-full bg-slate-100"><div class="h-2 rounded-full bg-emerald-500" :style="{ width: `${responseScore}%` }"></div></div>
+                        </div>
+                        <div>
+                            <div class="mb-2 flex justify-between text-xs font-semibold"><span class="text-slate-600">Average course rating</span><span class="text-amber-600">{{ evalStats.avg_overall ?? 0 }}/5</span></div>
+                            <div class="h-2 rounded-full bg-slate-100"><div class="h-2 rounded-full bg-amber-400" :style="{ width: `${((evalStats.avg_overall ?? 0) / 5) * 100}%` }"></div></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="rounded-xl bg-blue-600 px-4 py-3 text-xs font-bold text-white hover:bg-blue-700" @click="router.visit(route('hod.evaluations'))">Course Evaluations</button>
+                            <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50" @click="router.visit(route('communications.index'))">
+                                <ChatBubbleLeftRightIcon class="h-4 w-4" /> Communication
                             </button>
                         </div>
-                        <div class="mt-3 rounded-lg border border-purple-100 bg-purple-50 px-3 py-2.5">
-                            <p class="text-xs font-semibold text-purple-800">Smart Resolution Assistant</p>
-                            <p class="text-xs text-purple-600 mt-0.5">
-                                Mfumo unapendekeza suluhisho kutoka matatizo yaliyowahi kutatuliwa ili kurahisisha kazi ya HOD.
-                            </p>
-                        </div>
                     </div>
-                </div>
+                </article>
+            </section>
 
-                <!-- Right: Recent feedbacks -->
-                <div class="lg:col-span-2">
-                    <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                        <div class="border-b border-gray-100 px-5 py-3 bg-gray-50 flex items-center justify-between">
-                            <h3 class="text-sm font-semibold text-gray-700">Recent Pending Feedback</h3>
-                            <button @click="router.visit(route('hod.feedbacks'))"
-                                class="text-xs font-medium text-indigo-600 hover:text-indigo-700">
-                                View all →
-                            </button>
-                        </div>
-
-                        <div v-if="recent.length === 0" class="px-5 py-10 text-center">
-                            <svg class="mx-auto h-8 w-8 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/>
-                            </svg>
-                            <p class="text-sm text-gray-400">No pending feedbacks</p>
-                        </div>
-
-                        <div v-else class="divide-y divide-gray-50">
-                            <div v-for="f in recent" :key="f.id"
-                                class="px-5 py-4 hover:bg-gray-50 cursor-pointer transition"
-                                @click="router.visit(route('hod.feedbacks.show', f.id))">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="font-mono text-xs font-bold text-gray-900">{{ f.tracking_code }}</span>
-                                            <span class="rounded-full px-2 py-0.5 text-xs font-medium capitalize" :class="priorityColor(f.priority)">
-                                                {{ f.priority }}
-                                            </span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 truncate">{{ f.category }}</p>
-                                        <p class="text-xs text-gray-400 mt-0.5">{{ formatDate(f.submitted_at) }}</p>
-                                    </div>
-                                    <span class="flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize" :class="statusColor(f.status)">
-                                        {{ f.status?.replace('_', ' ') }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <div>
+                        <h2 class="text-sm font-black text-slate-900">Recent Submissions</h2>
+                        <p class="mt-1 text-xs text-slate-400">Latest anonymous department feedback</p>
                     </div>
+                    <button class="inline-flex items-center gap-1 text-xs font-bold text-blue-600" @click="router.visit(route('hod.feedbacks'))">View all <ArrowRightIcon class="h-3.5 w-3.5" /></button>
                 </div>
-            </div>
-
+                <div v-if="recent.length === 0" class="px-5 py-12 text-center text-sm text-slate-400">No pending feedback is available.</div>
+                <div v-else class="overflow-x-auto">
+                    <table class="min-w-full text-left">
+                        <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                            <tr><th class="px-5 py-3">Feedback ID</th><th class="px-5 py-3">Category</th><th class="px-5 py-3">Priority</th><th class="px-5 py-3">Status</th><th class="px-5 py-3">Submitted</th><th class="px-5 py-3 text-right">Action</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            <tr v-for="item in recent" :key="item.id" class="hover:bg-blue-50/40">
+                                <td class="px-5 py-4 font-mono font-bold text-slate-500">{{ item.tracking_code }}</td>
+                                <td class="px-5 py-4 font-semibold text-slate-900">{{ item.category }}</td>
+                                <td class="px-5 py-4 font-bold capitalize" :class="priorityClass(item.priority)">{{ item.priority }}</td>
+                                <td class="px-5 py-4"><span class="rounded-full px-2.5 py-1 font-bold capitalize" :class="statusClass(item.status)">{{ item.status?.replace('_', ' ') }}</span></td>
+                                <td class="px-5 py-4 text-slate-500">{{ formatDate(item.submitted_at) }}</td>
+                                <td class="px-5 py-4 text-right"><button class="font-bold text-blue-600" @click="router.visit(route('hod.feedbacks.show', item.id))">Review</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </HodLayout>
 </template>
