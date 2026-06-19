@@ -1,7 +1,8 @@
 <script setup>
 import RectorLayout from '@/Layouts/RectorLayout.vue';
 import { Head, useForm, usePage, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { listenToFeedback } from '@/lib/realtime';
 
 const props = defineProps({
     feedback: { type: Object, default: null },
@@ -44,6 +45,14 @@ const priorityColor = (p) => ({
 const formatDate = (d) => d ? new Date(d).toLocaleString() : '—';
 const canRespond = computed(() => !['resolved', 'closed'].includes(props.feedback?.status));
 const canResolve = computed(() => !['resolved', 'closed'].includes(props.feedback?.status));
+
+let stopRealtime = () => {};
+onMounted(() => {
+    stopRealtime = listenToFeedback(props.feedback?.realtime_channel, () => {
+        router.reload({ only: ['feedback'], preserveScroll: true });
+    });
+});
+onUnmounted(() => stopRealtime());
 
 // Build escalation trail
 const escalationTrail = computed(() => {

@@ -1,5 +1,5 @@
 <script setup>
-import { HomeIcon, InboxIcon, ChartBarIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, InboxIcon, ChartBarIcon, ChatBubbleLeftRightIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -43,7 +43,7 @@ const showingNavigationDropdown = ref(false);
 
                                 <NavLink
                                     :href="route('rector.feedbacks')"
-                                    :active="route().current('rector.feedbacks')"
+                                    :active="route().current('rector.feedbacks') || route().current('rector.feedbacks.show')"
                                 >
                                     <div class="flex items-center gap-2"><InboxIcon class="w-5 h-5" />Feedbacks</div>
                                 </NavLink>
@@ -52,6 +52,12 @@ const showingNavigationDropdown = ref(false);
                                     :active="route().current('rector.analytics')"
                                 >
                                     <div class="flex items-center gap-2"><ChartBarIcon class="w-5 h-5" />Analytics</div>
+                                </NavLink>
+                                <NavLink :href="route('communications.index')" :active="route().current('communications.*')">
+                                    <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-5 w-5" />Communication</div>
+                                </NavLink>
+                                <NavLink :href="route('rector.lecturer-chats')" :active="route().current('rector.lecturer-chats*')">
+                                    <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-5 w-5" />Lecturer Chats</div>
                                 </NavLink>
 
                             </div>
@@ -161,11 +167,17 @@ const showingNavigationDropdown = ref(false);
                         >
                             <div class="flex items-center gap-2"><HomeIcon class="h-4 w-4" />Dashboard</div>
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('rector.feedbacks')" :active="route().current('rector.feedbacks')">
+                        <ResponsiveNavLink :href="route('rector.feedbacks')" :active="route().current('rector.feedbacks') || route().current('rector.feedbacks.show')">
                             <div class="flex items-center gap-2"><InboxIcon class="h-4 w-4" />Feedbacks</div>
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('rector.analytics')" :active="route().current('rector.analytics')">
                             <div class="flex items-center gap-2"><ChartBarIcon class="h-4 w-4" />Analytics</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('communications.index')" :active="route().current('communications.*')">
+                            <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-4 w-4" />Communication</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('rector.lecturer-chats')" :active="route().current('rector.lecturer-chats*')">
+                            <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-4 w-4" />Lecturer Chats</div>
                         </ResponsiveNavLink>
                     </div>
 
