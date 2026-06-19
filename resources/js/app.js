@@ -1,4 +1,5 @@
 import '../css/app.css';
+import './lib/realtime';
 // import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/vue3';

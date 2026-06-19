@@ -13,6 +13,8 @@ use App\Http\Controllers\Hod\HodController;
 use Termwind\Components\Li;
 use App\Http\Controllers\Dean\DeanController;
 use App\Http\Controllers\Rector\RectorController;
+use App\Http\Controllers\CommunicationController;
+use App\Http\Controllers\FeedbackChatController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -30,6 +32,10 @@ Route::get('/', function () {
 
 // Change password — only accessible after first login
 Route::middleware('auth.session')->group(function () {
+    Route::get('/communications', [CommunicationController::class, 'index'])
+        ->name('communications.index');
+    Route::post('/communications', [CommunicationController::class, 'store'])
+        ->name('communications.store');
     Route::get('/change-password',  [AuthenticatedSessionController::class, 'showChangePassword'])->name('password.change');
     Route::post('/change-password', [AuthenticatedSessionController::class, 'updatePassword'])->name('password.update');
 });
@@ -71,6 +77,8 @@ Route::middleware(['auth.session', 'lecture'])->group(function () {
     Route::get('/lecturer/track',      [LectureController::class, 'trackFeedback'])->name('lecture.track');
     Route::post('/lecturer/followup',  [LectureController::class, 'sendFollowup'])->name('lecture.feedback.followup');
     Route::get('/lecturer/evaluations', [LectureController::class, 'evaluationResults'])->name('lecture.evaluations');
+    Route::get('/lecturer/rector-chat', [FeedbackChatController::class, 'lecturer'])->name('lecture.rector-chat');
+    Route::post('/lecturer/rector-chat', [FeedbackChatController::class, 'lecturerSend'])->name('lecture.rector-chat.send');
 });
 
 // Admin routes
@@ -124,6 +132,8 @@ Route::middleware(['auth.session', 'dean'])->group(function () {
     Route::post('/dean/feedbacks/{id}/escalate',  [DeanController::class, 'escalate'])->name('dean.feedbacks.escalate');
     Route::post('/dean/feedbacks/{id}/resolve',   [DeanController::class, 'resolve'])->name('dean.feedbacks.resolve');
     Route::get('/dean/evaluations', [DeanController::class, 'evaluations'])->name('dean.evaluations');
+    Route::get('/dean/conduct-reviews', [DeanController::class, 'conductReviews'])->name('dean.conduct-reviews');
+    Route::post('/dean/conduct-reviews/{id}/review', [DeanController::class, 'markConductReview'])->name('dean.conduct-reviews.mark');
 });
 
 Route::middleware(['auth.session', 'rector'])->group(function () {
@@ -133,6 +143,8 @@ Route::middleware(['auth.session', 'rector'])->group(function () {
     Route::post('/rector/feedbacks/{id}/respond',[RectorController::class, 'respond'])->name('rector.feedbacks.respond');
     Route::post('/rector/feedbacks/{id}/resolve',[RectorController::class, 'resolve'])->name('rector.feedbacks.resolve');
     Route::get('/rector/analytics', [RectorController::class, 'analytics'])->name('rector.analytics');
+    Route::get('/rector/lecturer-chats', [FeedbackChatController::class, 'rector'])->name('rector.lecturer-chats');
+    Route::post('/rector/lecturer-chats', [FeedbackChatController::class, 'rectorSend'])->name('rector.lecturer-chats.send');
 });
 
 Route::middleware('auth')->group(function () {
