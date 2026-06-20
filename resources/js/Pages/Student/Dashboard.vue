@@ -153,21 +153,21 @@ const firstName = computed(() => props.user?.first_name ?? props.user?.name?.spl
 
                         <!-- Evaluation window banner -->
                         <div v-if="activeWindow"
-                            class="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-4 text-white">
+                            class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
-                                        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
+                                        <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
                                         </svg>
                                     </div>
                                     <div>
                                         <p class="font-semibold text-sm">Course Evaluation Open!</p>
-                                        <p class="text-xs text-indigo-200">{{ activeWindow.title }} — {{ activeWindow.academic_year }}</p>
+                                        <p class="text-xs text-slate-500">{{ activeWindow.title }} — {{ activeWindow.academic_year }}</p>
                                     </div>
                                 </div>
                                 <button @click="router.visit(route('student.evaluations'))"
-                                    class="rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition flex-shrink-0">
+                                    class="flex-shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-700">
                                     Evaluate Now →
                                 </button>
                             </div>
@@ -280,42 +280,42 @@ const firstName = computed(() => props.user?.first_name ?? props.user?.name?.spl
                     <div class="space-y-4">
 
                         <!-- Welcome card -->
-                        <div class="rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 p-5 text-white">
-                            <p class="text-xs text-indigo-200 mb-1">Welcome back,</p>
-                            <h3 class="text-lg font-bold">{{ firstName }}</h3>
-                            <p class="text-xs text-indigo-200 mt-1">
+                        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <p class="mb-1 text-xs text-slate-400">Student profile</p>
+                            <h3 class="text-lg font-bold text-slate-950">{{ firstName }}</h3>
+                            <p class="mt-1 text-xs text-slate-500">
                                 {{ profile.program ?? 'Student' }}
                             </p>
-                            <div v-if="profile.department" class="mt-3 rounded-lg bg-white/10 px-3 py-2">
-                                <p class="text-xs text-indigo-200">Department</p>
-                                <p class="text-sm font-semibold">{{ profile.department }}</p>
+                            <div v-if="profile.department" class="mt-3 rounded-lg bg-slate-50 px-3 py-2">
+                                <p class="text-xs text-slate-400">Department</p>
+                                <p class="text-sm font-semibold text-slate-700">{{ profile.department }}</p>
                             </div>
                             <div v-if="profile.year_of_study" class="mt-2 flex gap-3">
-                                <div class="rounded-lg bg-white/10 px-3 py-2 flex-1">
-                                    <p class="text-xs text-indigo-200">Year</p>
-                                    <p class="text-sm font-bold">{{ profile.year_of_study }}</p>
+                                <div class="flex-1 rounded-lg bg-slate-50 px-3 py-2">
+                                    <p class="text-xs text-slate-400">Year</p>
+                                    <p class="text-sm font-bold text-slate-700">{{ profile.year_of_study }}</p>
                                 </div>
-                                <div class="rounded-lg bg-white/10 px-3 py-2 flex-1">
-                                    <p class="text-xs text-indigo-200">Semester</p>
-                                    <p class="text-sm font-bold">{{ profile.semester }}</p>
+                                <div class="flex-1 rounded-lg bg-slate-50 px-3 py-2">
+                                    <p class="text-xs text-slate-400">Semester</p>
+                                    <p class="text-sm font-bold text-slate-700">{{ profile.semester }}</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Anonymous Privacy -->
-                        <div class="rounded-2xl bg-indigo-600 px-5 py-5 text-white">
-                            <h3 class="text-sm font-bold mb-2 flex items-center gap-2">
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <div class="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm">
+                            <h3 class="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
+                                <svg class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
                                 </svg>
                                 Anonymous Privacy
                             </h3>
-                            <p class="text-xs text-indigo-200 leading-relaxed">
+                            <p class="text-xs leading-relaxed text-slate-500">
                                 Valid feedback is encrypted and identity-protected. Repeated abusive-language attempts are blocked and handled through a separate restricted conduct review.
                             </p>
                             <div class="mt-3 flex items-center gap-2">
-                                <div class="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
-                                <p class="text-xs text-indigo-200 font-medium">Encryption active</p>
+                                <div class="h-2 w-2 animate-pulse rounded-full bg-emerald-500"></div>
+                                <p class="text-xs font-medium text-emerald-600">Encryption active</p>
                             </div>
                         </div>
 

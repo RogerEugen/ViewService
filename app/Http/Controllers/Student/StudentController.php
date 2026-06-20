@@ -284,8 +284,8 @@ class StudentController extends Controller
             'user'          => $user,
             'department_id' => $departmentId,
             'faculty_id'    => session('faculty_id') ?? ($user['profile']['faculty_id'] ?? null),
-            'academic_year' => $user['profile']['academic_year'] ?? '',
-            'semester'      => $user['profile']['semester'] ?? 1,
+            'academic_year' => $window['academic_year'] ?? '',
+            'semester'      => (int) ($window['semester'] ?? 1),
         ]);
     }
 
@@ -308,12 +308,10 @@ class StudentController extends Controller
         'comments'               => ['nullable', 'string', 'max:2000'],
     ]);
 
-    // ✅ Use existing session token — DO NOT refresh for evaluations
+    // Refreshing is safe because the Auth service returns a stable anonymous
+    // participant key used to prevent duplicate evaluations.
+    TokenService::refreshAnonToken();
     $anonToken = session('anonymous_token');
-    if (!$anonToken) {
-        TokenService::refreshAnonToken();
-        $anonToken = session('anonymous_token');
-    }
 
     if (!$anonToken) {
         return back()->withErrors(['error' => 'Session expired. Please login again.']);
@@ -351,8 +349,8 @@ class StudentController extends Controller
         }
     }
 
-    $academicYear = $request->academic_year ?: ($profile['academic_year'] ?? (date('Y') . '/' . (date('Y') + 1)));
-    $semester     = (int) ($request->semester ?: ($profile['semester'] ?? 1));
+    $academicYear = (string) $request->academic_year;
+    $semester     = (int) $request->semester;
 
     Log::info('Evaluation submit', [
         'course_code'   => $request->course_code,

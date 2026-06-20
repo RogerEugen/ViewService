@@ -34,8 +34,8 @@ const form = useForm({
     window_id:              props.window?.id ?? '',
     course_code:            '',
     subject_name:           '',
-    academic_year:          props.academic_year || props.window?.academic_year || '',
-    semester:               Number(props.semester || props.window?.semester || 1),
+    academic_year:          props.window?.academic_year || props.academic_year || '',
+    semester:               Number(props.window?.semester || props.semester || 1),
     lecturer_id:            '',
     lecturer_name:          '',
     teaching_quality:       0,
@@ -50,8 +50,8 @@ const form = useForm({
 const startNewEvaluation = () => {
     form.reset();
     form.window_id = props.window?.id ?? '';
-    form.academic_year = props.academic_year || props.window?.academic_year || '';
-    form.semester = Number(props.semester || props.window?.semester || 1);
+    form.academic_year = props.window?.academic_year || props.academic_year || '';
+    form.semester = Number(props.window?.semester || props.semester || 1);
     showForm.value = true;
 };
 
@@ -79,8 +79,8 @@ const submitEval = () => {
             showForm.value = false;
             form.reset();
             form.window_id = props.window?.id ?? '';
-            form.academic_year = props.academic_year || props.window?.academic_year || '';
-            form.semester = Number(props.semester || props.window?.semester || 1);
+            form.academic_year = props.window?.academic_year || props.academic_year || '';
+            form.semester = Number(props.window?.semester || props.semester || 1);
         },
     });
 };
@@ -170,7 +170,7 @@ watch(() => form.lecturer_id, () => {
             <template v-if="window">
 
                 <!-- Window banner -->
-                <div class="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-4 text-white">
+                <div class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <div>
                             <div class="flex items-center gap-2 mb-1">
@@ -178,13 +178,13 @@ watch(() => form.lecturer_id, () => {
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400"></span>
                                 </span>
-                                <span class="text-xs font-semibold text-indigo-200 uppercase tracking-wide">Evaluation Open</span>
+                                <span class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Evaluation open</span>
                             </div>
                             <h3 class="text-base font-bold">{{ window.title }}</h3>
-                            <p class="text-xs text-indigo-200 mt-0.5">{{ window.academic_year }} — Semester {{ window.semester }}</p>
+                            <p class="mt-0.5 text-xs text-slate-500">{{ window.academic_year }} — Semester {{ window.semester }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-xs text-indigo-200">Closes</p>
+                            <p class="text-xs text-slate-500">Closes</p>
                             <p class="text-sm font-semibold">{{ formatDate(window.closes_at) }}</p>
                         </div>
                     </div>
@@ -256,13 +256,13 @@ watch(() => form.lecturer_id, () => {
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1.5">Academic Year <span class="text-red-500">*</span></label>
-                                    <input v-model="form.academic_year" type="text" placeholder="e.g. 2025/2026"
-                                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"/>
+                                    <input v-model="form.academic_year" type="text" readonly
+                                        class="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-600"/>
                                     <p v-if="form.errors.academic_year" class="mt-1 text-xs text-red-500">{{ form.errors.academic_year }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1.5">Semester <span class="text-red-500">*</span></label>
-                                    <select v-model="form.semester" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white">
+                                    <select v-model="form.semester" disabled class="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-600">
                                         <option :value="1">Semester 1</option>
                                         <option :value="2">Semester 2</option>
                                     </select>
