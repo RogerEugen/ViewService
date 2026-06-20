@@ -2,6 +2,8 @@
 import RectorLayout from '@/Layouts/RectorLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
+import MetricCard from '@/Components/MetricCard.vue';
+import { UserGroupIcon, BookOpenIcon, BuildingOffice2Icon, CheckCircleIcon, ClockIcon, StarIcon, InboxIcon, ArrowUpRightIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     windows:       { type: Array,  default: () => [] },
@@ -75,48 +77,28 @@ const systemAvg = computed(() =>
             <template v-if="activeWindow">
 
                 <!-- Window info -->
-                <div class="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-4 text-white">
+                <div class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-indigo-200 mb-1">Active Evaluation Window</p>
+                            <p class="mb-1 text-xs font-semibold text-emerald-600">Selected evaluation period</p>
                             <h3 class="font-bold text-lg">{{ activeWindow.title }}</h3>
-                            <p class="text-xs text-indigo-200">{{ activeWindow.academic_year }} — Semester {{ activeWindow.semester }}</p>
+                            <p class="text-xs text-slate-500">{{ activeWindow.academic_year }} — Semester {{ activeWindow.semester }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-3xl font-black">{{ overview.total_evaluations ?? 0 }}</p>
-                            <p class="text-xs text-indigo-200">Total Submissions</p>
+                            <p class="text-xs text-slate-500">Total Submissions</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Key metrics row -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-                    <div class="rounded-xl border border-gray-200 bg-white px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-indigo-600">{{ overview.unique_students ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">Students Participated</p>
-                    </div>
-                    <div class="rounded-xl border border-gray-200 bg-white px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-blue-600">{{ overview.unique_courses ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">Courses Evaluated</p>
-                    </div>
-                    <div class="rounded-xl border border-gray-200 bg-white px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-purple-600">{{ overview.unique_departments ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">Departments</p>
-                    </div>
-                    <div class="rounded-xl border border-green-100 bg-green-50 px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-green-700">{{ overview.courses_with_results ?? 0 }}</p>
-                        <p class="text-xs text-green-500 mt-0.5">With Results</p>
-                    </div>
-                    <div class="rounded-xl border border-yellow-100 bg-yellow-50 px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-yellow-700">{{ overview.courses_pending ?? 0 }}</p>
-                        <p class="text-xs text-yellow-500 mt-0.5">Pending (< 5)</p>
-                    </div>
-                    <div class="rounded-xl border border-gray-200 bg-white px-4 py-4 text-center">
-                        <p class="text-2xl font-black" :class="ratingColor(systemAvg.overall ?? 0)">
-                            {{ systemAvg.overall ?? '—' }}
-                        </p>
-                        <p class="text-xs text-gray-400 mt-0.5">System Avg /5</p>
-                    </div>
+                    <MetricCard label="Students participated" :value="overview.unique_students" :icon="UserGroupIcon" tone="indigo" />
+                    <MetricCard label="Courses evaluated" :value="overview.unique_courses" :icon="BookOpenIcon" tone="blue" />
+                    <MetricCard label="Departments" :value="overview.unique_departments" :icon="BuildingOffice2Icon" tone="violet" />
+                    <MetricCard label="With results" :value="overview.courses_with_results" :icon="CheckCircleIcon" tone="emerald" />
+                    <MetricCard label="Pending below 5" :value="overview.courses_pending" :icon="ClockIcon" tone="amber" />
+                    <MetricCard label="System average /5" :value="systemAvg.overall ?? '—'" :icon="StarIcon" tone="orange" />
                 </div>
 
                 <!-- 3-column grid -->
@@ -268,22 +250,10 @@ const systemAvg = computed(() =>
                 <div class="rounded-xl border border-gray-200 bg-white p-5">
                     <h3 class="text-sm font-semibold text-gray-800 mb-4">Campus Feedback Overview</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div class="text-center">
-                            <p class="text-2xl font-black text-gray-900">{{ feedbackStats.total ?? 0 }}</p>
-                            <p class="text-xs text-gray-400">Total Feedback</p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-2xl font-black text-green-600">{{ feedbackStats.resolved ?? 0 }}</p>
-                            <p class="text-xs text-gray-400">Resolved</p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-2xl font-black text-orange-600">{{ feedbackStats.escalated ?? 0 }}</p>
-                            <p class="text-xs text-gray-400">Escalated</p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-2xl font-black text-red-600">{{ feedbackStats.urgent ?? 0 }}</p>
-                            <p class="text-xs text-gray-400">Urgent</p>
-                        </div>
+                        <MetricCard label="Total feedback" :value="feedbackStats.total" :icon="InboxIcon" tone="blue" />
+                        <MetricCard label="Resolved" :value="feedbackStats.resolved" :icon="CheckCircleIcon" tone="emerald" />
+                        <MetricCard label="Escalated" :value="feedbackStats.escalated" :icon="ArrowUpRightIcon" tone="orange" />
+                        <MetricCard label="Urgent" :value="feedbackStats.urgent" :icon="ExclamationTriangleIcon" tone="rose" />
                     </div>
                     <!-- Resolution progress bar -->
                     <div class="mt-4">
