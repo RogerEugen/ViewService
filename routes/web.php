@@ -13,6 +13,7 @@ use App\Http\Controllers\Hod\HodController;
 use Termwind\Components\Li;
 use App\Http\Controllers\Dean\DeanController;
 use App\Http\Controllers\Rector\RectorController;
+use App\Http\Controllers\FeedbackInsightsController;
 use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\FeedbackChatController;
 
@@ -122,6 +123,7 @@ Route::middleware(['auth.session', 'hod'])->group(function () {
     Route::post('/hod/feedbacks/{id}/escalate', [HodController::class, 'escalate'])->name('hod.feedbacks.escalate');
     Route::post('/hod/feedbacks/{id}/resolve',  [HodController::class, 'resolve'])->name('hod.feedbacks.resolve');
     Route::get('/hod/evaluations', [HodController::class, 'evaluations'])->name('hod.evaluations');
+    Route::get('/hod/recurring-issues', [FeedbackInsightsController::class, 'hod'])->name('hod.recurring-issues');
 });
 
 Route::middleware(['auth.session', 'dean'])->group(function () {
@@ -133,6 +135,7 @@ Route::middleware(['auth.session', 'dean'])->group(function () {
     Route::post('/dean/feedbacks/{id}/resolve',   [DeanController::class, 'resolve'])->name('dean.feedbacks.resolve');
     Route::get('/dean/evaluations', [DeanController::class, 'evaluations'])->name('dean.evaluations');
     Route::get('/dean/conduct-reviews', [DeanController::class, 'conductReviews'])->name('dean.conduct-reviews');
+    Route::get('/dean/recurring-issues', [FeedbackInsightsController::class, 'dean'])->name('dean.recurring-issues');
     Route::post('/dean/conduct-reviews/{id}/review', [DeanController::class, 'markConductReview'])->name('dean.conduct-reviews.mark');
 });
 
@@ -143,6 +146,9 @@ Route::middleware(['auth.session', 'rector'])->group(function () {
     Route::post('/rector/feedbacks/{id}/respond',[RectorController::class, 'respond'])->name('rector.feedbacks.respond');
     Route::post('/rector/feedbacks/{id}/resolve',[RectorController::class, 'resolve'])->name('rector.feedbacks.resolve');
     Route::get('/rector/analytics', [RectorController::class, 'analytics'])->name('rector.analytics');
+    Route::get('/rector/recurring-issues', [FeedbackInsightsController::class, 'rector'])->name('rector.recurring-issues');
+    Route::get('/rector/reports', [FeedbackInsightsController::class, 'rectorReport'])->name('rector.reports');
+    Route::get('/rector/reports/export', [FeedbackInsightsController::class, 'exportRectorReport'])->name('rector.reports.export');
     Route::get('/rector/lecturer-chats', [FeedbackChatController::class, 'rector'])->name('rector.lecturer-chats');
     Route::post('/rector/lecturer-chats', [FeedbackChatController::class, 'rectorSend'])->name('rector.lecturer-chats.send');
 });
