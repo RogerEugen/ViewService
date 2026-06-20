@@ -1,5 +1,5 @@
 <script setup>
-import { HomeIcon, InboxIcon, ChartBarIcon, ChatBubbleLeftRightIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, InboxIcon, ChartBarIcon, ChatBubbleLeftRightIcon, RectangleGroupIcon, DocumentChartBarIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -32,7 +32,7 @@ const showingNavigationDropdown = ref(false);
 
                             <!-- Navigation Links -->
                             <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
+                                class="hidden space-x-5 sm:-my-px sm:ms-8 sm:flex"
                             >
                                 <NavLink
                                     :href="route('rector.dashboard')"
@@ -52,6 +52,12 @@ const showingNavigationDropdown = ref(false);
                                     :active="route().current('rector.analytics')"
                                 >
                                     <div class="flex items-center gap-2"><ChartBarIcon class="w-5 h-5" />Analytics</div>
+                                </NavLink>
+                                <NavLink :href="route('rector.recurring-issues')" :active="route().current('rector.recurring-issues')">
+                                    <div class="flex items-center gap-2"><RectangleGroupIcon class="h-5 w-5" />Issue Groups</div>
+                                </NavLink>
+                                <NavLink :href="route('rector.reports')" :active="route().current('rector.reports*')">
+                                    <div class="flex items-center gap-2"><DocumentChartBarIcon class="h-5 w-5" />Reports</div>
                                 </NavLink>
                                 <NavLink :href="route('communications.index')" :active="route().current('communications.*')">
                                     <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-5 w-5" />Communication</div>
@@ -172,6 +178,12 @@ const showingNavigationDropdown = ref(false);
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('rector.analytics')" :active="route().current('rector.analytics')">
                             <div class="flex items-center gap-2"><ChartBarIcon class="h-4 w-4" />Analytics</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('rector.recurring-issues')" :active="route().current('rector.recurring-issues')">
+                            <div class="flex items-center gap-2"><RectangleGroupIcon class="h-4 w-4" />Issue Groups</div>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('rector.reports')" :active="route().current('rector.reports*')">
+                            <div class="flex items-center gap-2"><DocumentChartBarIcon class="h-4 w-4" />Reports</div>
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('communications.index')" :active="route().current('communications.*')">
                             <div class="flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-4 w-4" />Communication</div>

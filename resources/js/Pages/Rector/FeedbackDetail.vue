@@ -6,6 +6,7 @@ import { listenToFeedback } from '@/lib/realtime';
 
 const props = defineProps({
     feedback: { type: Object, default: null },
+    suggestions: { type: Array, default: () => [] },
     user:     { type: Object, default: () => ({}) },
 });
 
@@ -13,6 +14,7 @@ const page  = usePage();
 const flash = computed(() => page.props.flash ?? {});
 
 const respondForm        = useForm({ response: '' });
+const resolveForm        = useForm({ resolution: '' });
 const showResolveConfirm = ref(false);
 
 const submitResponse = () => {
@@ -22,9 +24,13 @@ const submitResponse = () => {
 };
 
 const submitResolve = () => {
-    router.post(route('rector.feedbacks.resolve', props.feedback.id), {}, {
+    resolveForm.post(route('rector.feedbacks.resolve', props.feedback.id), {
         onSuccess: () => showResolveConfirm.value = false,
     });
+};
+const useSuggestedResolution = (resolution) => {
+    resolveForm.resolution = resolution;
+    showResolveConfirm.value = true;
 };
 
 const statusColor = (s) => ({
@@ -236,6 +242,25 @@ const escalationTrail = computed(() => {
                 <div class="rounded-xl border border-gray-200 bg-white p-5">
                     <h3 class="text-sm font-semibold text-gray-700 mb-4">Rector Actions</h3>
 
+                    <div v-if="suggestions.length" class="mb-5 rounded-xl border border-amber-100 bg-amber-50 p-4">
+                        <div class="mb-3">
+                            <p class="text-sm font-bold text-slate-900">Solutions from similar resolved feedback</p>
+                            <p class="mt-0.5 text-xs text-slate-500">Review a proven response and adapt it before resolving this case.</p>
+                        </div>
+                        <div class="space-y-2">
+                            <div v-for="item in suggestions" :key="item.feedback_id" class="rounded-lg border border-amber-100 bg-white p-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="text-[10px] font-black uppercase text-amber-700">{{ Math.round(item.similarity_score * 100) }}% similar</span>
+                                    <span class="text-[10px] text-slate-400">{{ item.category }}</span>
+                                </div>
+                                <p class="mt-2 text-sm leading-6 text-slate-700">{{ item.resolution }}</p>
+                                <button @click="useSuggestedResolution(item.resolution)" class="mt-3 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-50">
+                                    Use this solution
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Respond -->
                     <div v-if="canRespond" class="mb-5">
                         <label class="block text-xs font-medium text-gray-600 mb-1.5">
@@ -302,10 +327,21 @@ const escalationTrail = computed(() => {
                 <p class="text-center text-sm text-gray-500 mb-5">
                     This will mark the feedback as fully resolved. The anonymous sender will see this status when they check their tracking code.
                 </p>
+                <label class="mb-5 block text-xs font-bold text-slate-600">
+                    Resolution applied
+                    <textarea
+                        v-model="resolveForm.resolution"
+                        rows="4"
+                        maxlength="2000"
+                        placeholder="Describe the solution applied. This becomes a reusable suggestion for future similar issues."
+                        class="mt-2 w-full resize-none rounded-xl border-slate-200 text-sm focus:border-blue-500 focus:ring-blue-500"
+                    ></textarea>
+                    <span v-if="resolveForm.errors.resolution" class="mt-1 block text-xs text-red-600">{{ resolveForm.errors.resolution }}</span>
+                </label>
                 <div class="flex gap-3">
-                    <button @click="submitResolve"
+                    <button @click="submitResolve" :disabled="resolveForm.processing"
                         class="flex-1 rounded-xl bg-green-600 px-4 py-3 text-sm font-bold text-white hover:bg-green-700">
-                        Confirm — Mark Resolved
+                        {{ resolveForm.processing ? 'Saving...' : 'Confirm — Mark Resolved' }}
                     </button>
                     <button @click="showResolveConfirm = false"
                         class="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50">

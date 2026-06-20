@@ -99,8 +99,27 @@ class RectorController extends Controller
             $feedback = null;
         }
 
+        $suggestions = [];
+        if ($feedback && !empty($feedback['content'])) {
+            try {
+                $suggestionResponse = Http::timeout(10)->post(
+                    $this->feedbackApiUrl('feedback/suggestions'),
+                    [
+                        'content' => $feedback['content'],
+                        'category_id' => $feedback['category_id'] ?? null,
+                        'limit' => 3,
+                    ]
+                );
+                if ($suggestionResponse->successful()) {
+                    $suggestions = $suggestionResponse->json('suggestions', []);
+                }
+            } catch (\Throwable) {
+            }
+        }
+
         return Inertia::render('Rector/FeedbackDetail', [
             'feedback' => $feedback,
+            'suggestions' => $suggestions,
             'user'     => session('user'),
         ]);
     }
@@ -133,11 +152,18 @@ class RectorController extends Controller
     }
 
     // ── Resolve ───────────────────────────────────────────────
-    public function resolve(int $id): RedirectResponse
+    public function resolve(Request $request, int $id): RedirectResponse
     {
+        $request->validate([
+            'resolution' => ['nullable', 'string', 'max:2000'],
+        ]);
+
         try {
             Http::timeout(10)
-                ->post($this->feedbackApiUrl("rector/feedbacks/{$id}/resolve"));
+                ->post($this->feedbackApiUrl("rector/feedbacks/{$id}/resolve"), [
+                    'responder_role' => 'rector',
+                    'resolution' => $request->input('resolution'),
+                ]);
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Service unavailable.']);
         }
