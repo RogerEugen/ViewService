@@ -2,6 +2,8 @@
 import RegistrarLayout from '@/Layouts/RegistrarLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import MetricCard from '@/Components/MetricCard.vue';
+import { ArrowPathIcon, AcademicCapIcon, UserGroupIcon, UserPlusIcon, IdentificationIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     stats:         { type: Object, default: () => ({}) },
@@ -45,27 +47,27 @@ const typeColor = (t) => t === 'students'
         <div class="py-8 px-4 max-w-6xl mx-auto space-y-6">
 
             <!-- Welcome banner -->
-            <div class="rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-700 px-6 py-6 text-white">
+            <div class="rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-bold">User Management Center</h3>
-                        <p class="text-sm text-indigo-200 mt-1">
+                        <h3 class="text-lg font-bold text-slate-950">User management overview</h3>
+                        <p class="mt-1 text-sm text-slate-500">
                             Manage student and staff registrations via CSV import.
                         </p>
                         <div class="flex items-center gap-4 mt-3">
                             <div>
-                                <p class="text-2xl font-black">{{ stats.total_students ?? 0 }}</p>
-                                <p class="text-xs text-indigo-200">Students Imported</p>
+                                <p class="text-2xl font-black text-slate-950">{{ stats.total_students ?? 0 }}</p>
+                                <p class="text-xs text-slate-500">Students Imported</p>
                             </div>
-                            <div class="h-8 w-px bg-white/20"></div>
+                            <div class="h-8 w-px bg-slate-200"></div>
                             <div>
-                                <p class="text-2xl font-black">{{ stats.total_staff ?? 0 }}</p>
-                                <p class="text-xs text-indigo-200">Staff Imported</p>
+                                <p class="text-2xl font-black text-slate-950">{{ stats.total_staff ?? 0 }}</p>
+                                <p class="text-xs text-slate-500">Staff Imported</p>
                             </div>
-                            <div class="h-8 w-px bg-white/20"></div>
+                            <div class="h-8 w-px bg-slate-200"></div>
                             <div>
-                                <p class="text-2xl font-black">{{ stats.total_imports ?? 0 }}</p>
-                                <p class="text-xs text-indigo-200">Total Imports</p>
+                                <p class="text-2xl font-black text-slate-950">{{ stats.total_imports ?? 0 }}</p>
+                                <p class="text-xs text-slate-500">Total Imports</p>
                             </div>
                         </div>
                     </div>
@@ -79,30 +81,12 @@ const typeColor = (t) => t === 'students'
 
             <!-- Stats cards -->
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                <div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
-                    <p class="text-2xl font-black text-gray-900">{{ stats.total_imports ?? 0 }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">Total Imports</p>
-                </div>
-                <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-center">
-                    <p class="text-2xl font-black text-indigo-700">{{ stats.student_imports ?? 0 }}</p>
-                    <p class="text-xs text-indigo-500 mt-0.5">Student Batches</p>
-                </div>
-                <div class="rounded-xl border border-teal-100 bg-teal-50 p-4 text-center">
-                    <p class="text-2xl font-black text-teal-700">{{ stats.staff_imports ?? 0 }}</p>
-                    <p class="text-xs text-teal-500 mt-0.5">Staff Batches</p>
-                </div>
-                <div class="rounded-xl border border-green-100 bg-green-50 p-4 text-center">
-                    <p class="text-2xl font-black text-green-700">{{ stats.total_students ?? 0 }}</p>
-                    <p class="text-xs text-green-500 mt-0.5">Students Added</p>
-                </div>
-                <div class="rounded-xl border border-blue-100 bg-blue-50 p-4 text-center">
-                    <p class="text-2xl font-black text-blue-700">{{ stats.total_staff ?? 0 }}</p>
-                    <p class="text-xs text-blue-500 mt-0.5">Staff Added</p>
-                </div>
-                <div class="rounded-xl border border-red-100 bg-red-50 p-4 text-center">
-                    <p class="text-2xl font-black text-red-700">{{ stats.total_failed ?? 0 }}</p>
-                    <p class="text-xs text-red-500 mt-0.5">Failed Rows</p>
-                </div>
+                <MetricCard label="Total imports" :value="stats.total_imports" :icon="ArrowPathIcon" tone="blue" />
+                <MetricCard label="Student batches" :value="stats.student_imports" :icon="AcademicCapIcon" tone="indigo" />
+                <MetricCard label="Staff batches" :value="stats.staff_imports" :icon="UserGroupIcon" tone="teal" />
+                <MetricCard label="Students added" :value="stats.total_students" :icon="UserPlusIcon" tone="emerald" />
+                <MetricCard label="Staff added" :value="stats.total_staff" :icon="IdentificationIcon" tone="blue" />
+                <MetricCard label="Failed rows" :value="stats.total_failed" :icon="ExclamationTriangleIcon" tone="rose" />
             </div>
 
             <!-- Quick actions -->
