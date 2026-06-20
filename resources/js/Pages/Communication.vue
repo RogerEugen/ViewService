@@ -26,6 +26,34 @@ const form = useForm({ room: props.selectedRoom, message: '' });
 const liveMessages = ref([...props.messages]);
 const connectionState = ref('connecting');
 const messagesPanel = ref(null);
+const roomSearch = ref('');
+const leadershipFilter = ref('all');
+const roomUnread = ref(Object.fromEntries(
+    props.rooms.map((room) => [room.key, Number(room.unread_count ?? 0)])
+));
+const rectorFilters = [
+    { key: 'all', label: 'All' },
+    { key: 'hod', label: 'HODs' },
+    { key: 'dean', label: 'Deans' },
+];
+const filteredRooms = computed(() => {
+    const query = roomSearch.value.trim().toLowerCase();
+
+    return props.rooms.filter((room) => {
+        const matchesRole = props.currentRole !== 'rector'
+            || leadershipFilter.value === 'all'
+            || room.participant_role === leadershipFilter.value;
+        const matchesSearch = query === ''
+            || room.label.toLowerCase().includes(query);
+
+        return matchesRole && matchesSearch;
+    });
+});
+const totalUnread = computed(() => Object.values(roomUnread.value)
+    .reduce((sum, count) => sum + Number(count || 0), 0));
+const roleUnreadCount = (role) => props.rooms
+    .filter((room) => role === 'all' || room.participant_role === role)
+    .reduce((sum, room) => sum + Number(roomUnread.value[room.key] || 0), 0);
 const notificationSound = typeof Audio !== 'undefined'
     ? new Audio(
         import.meta.env.VITE_NOTIFICATION_SOUND_URL
@@ -38,6 +66,11 @@ watch(() => props.messages, (messages) => {
     liveMessages.value = [...messages];
     scrollToLatest();
 });
+watch(() => props.rooms, (rooms) => {
+    roomUnread.value = Object.fromEntries(
+        rooms.map((room) => [room.key, Number(room.unread_count ?? 0)])
+    );
+}, { deep: true });
 
 const selectRoom = (room) => {
     router.get(route('communications.index'), { room }, {
@@ -123,13 +156,52 @@ const addRealtimeMessage = (event) => {
     }
 };
 
+const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+const markRoomRead = (room) => {
+    if (!room) return;
+
+    roomUnread.value[room] = 0;
+
+    fetch(route('communications.read'), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken(),
+        },
+        body: JSON.stringify({ room }),
+    }).catch(() => {
+        // The next page refresh will reconcile the persisted unread count.
+    });
+};
+
+const handleRoomRealtime = (room, event) => {
+    const message = event?.message;
+    if (!message || message.sender_role === props.currentRole) return;
+
+    if (room === props.selectedRoom) {
+        addRealtimeMessage(event);
+        markRoomRead(room);
+        return;
+    }
+
+    roomUnread.value[room] = Number(roomUnread.value[room] || 0) + 1;
+    playNotification();
+};
+
 let stopRealtime = () => {};
 onMounted(() => {
-    stopRealtime = listenToCommunication(
-        props.realtimeChannel,
-        addRealtimeMessage,
-        (state) => { connectionState.value = state; },
-    );
+    const listeners = props.rooms
+        .filter((room) => room.realtime_channel)
+        .map((room) => listenToCommunication(
+            room.realtime_channel,
+            (event) => handleRoomRealtime(room.key, event),
+            room.key === props.selectedRoom
+                ? (state) => { connectionState.value = state; }
+                : () => {},
+        ));
+    stopRealtime = () => listeners.forEach((stop) => stop());
+    markRoomRead(props.selectedRoom);
     scrollToLatest();
 });
 onUnmounted(() => stopRealtime());
@@ -156,17 +228,44 @@ onUnmounted(() => stopRealtime());
                 <aside class="border-b border-slate-200 bg-slate-50 lg:min-h-[680px] lg:border-b-0 lg:border-r">
                     <div class="border-b border-slate-200 bg-white p-4">
                         <div class="relative">
-                            <input type="text" value="" placeholder="Search conversations" class="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-4 pr-3 text-xs focus:border-blue-500 focus:ring-blue-500" />
+                            <input v-model="roomSearch" type="search" placeholder="Search conversations" class="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-4 pr-3 text-xs focus:border-blue-500 focus:ring-blue-500" />
+                        </div>
+                    </div>
+                    <div v-if="currentRole === 'rector'" class="border-b border-slate-200 bg-white px-3 py-3">
+                        <div class="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1">
+                            <button
+                                v-for="filter in rectorFilters"
+                                :key="filter.key"
+                                type="button"
+                                class="flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-black transition"
+                                :class="leadershipFilter === filter.key
+                                    ? 'bg-white text-blue-700 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-800'"
+                                @click="leadershipFilter = filter.key"
+                            >
+                                {{ filter.label }}
+                                <span
+                                    class="rounded-full px-1.5 py-0.5 text-[9px]"
+                                    :class="leadershipFilter === filter.key ? 'bg-blue-50 text-blue-700' : 'bg-slate-200 text-slate-500'"
+                                >
+                                    {{ roleUnreadCount(filter.key) }}
+                                </span>
+                            </button>
                         </div>
                     </div>
                     <div class="flex items-center gap-4 border-b border-slate-200 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         <span class="text-blue-600">Inbox</span>
                         <span>Encrypted</span>
-                        <span class="ml-auto rounded-full bg-blue-600 px-2 py-0.5 text-white">{{ rooms.length }}</span>
+                        <span
+                            class="ml-auto rounded-full px-2 py-0.5 text-white"
+                            :class="totalUnread > 0 ? 'bg-red-500' : 'bg-blue-600'"
+                        >
+                            {{ totalUnread }}
+                        </span>
                     </div>
                     <div class="space-y-1 p-2">
                         <button
-                            v-for="room in rooms"
+                            v-for="room in filteredRooms"
                             :key="room.key"
                             type="button"
                             class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition"
@@ -180,8 +279,18 @@ onUnmounted(() => stopRealtime());
                                 <span class="block truncate text-xs font-black text-slate-900">{{ room.label }}</span>
                                 <span class="mt-1 block truncate text-[10px] text-slate-400">Secure real-time conversation</span>
                             </span>
-                            <span v-if="room.key === selectedRoom" class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                            <span
+                                v-if="roomUnread[room.key] > 0"
+                                class="grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-black text-white"
+                            >
+                                {{ roomUnread[room.key] > 99 ? '99+' : roomUnread[room.key] }}
+                            </span>
+                            <span v-else-if="room.key === selectedRoom" class="h-2 w-2 rounded-full bg-emerald-500"></span>
                         </button>
+                        <div v-if="filteredRooms.length === 0" class="px-4 py-10 text-center">
+                            <p class="text-xs font-bold text-slate-600">No conversations found</p>
+                            <p class="mt-1 text-[10px] text-slate-400">Try another leader filter or search term.</p>
+                        </div>
                     </div>
                 </aside>
 

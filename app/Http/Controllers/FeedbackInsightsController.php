@@ -113,6 +113,7 @@ class FeedbackInsightsController extends Controller
         $filters = [
             'status' => $request->query('status', 'all'),
             'category_id' => $request->integer('category_id') ?: null,
+            'filter_department_id' => $request->integer('department_id') ?: null,
             'minimum_group_size' => max(1, $request->integer('minimum_group_size', 2)),
         ];
         $groups = [];
@@ -121,6 +122,8 @@ class FeedbackInsightsController extends Controller
             'recurring_groups' => 0,
             'grouped_feedbacks' => 0,
             'groups_with_solution' => 0,
+            'priority_investigations' => 0,
+            'departments_affected' => 0,
         ];
         $categories = [];
 
@@ -143,13 +146,22 @@ class FeedbackInsightsController extends Controller
         }
 
         [, $departments] = $this->organisationUnits();
+        if ($role === 'dean' && !empty($scope['faculty_id'])) {
+            $departments = collect($departments)
+                ->where('faculty_id', (int) $scope['faculty_id'])
+                ->values()
+                ->all();
+        }
 
         return Inertia::render($page, [
             'groups' => $groups,
             'summary' => $summary,
             'categories' => $categories,
             'departments' => $departments,
-            'filters' => $filters,
+            'filters' => [
+                ...$filters,
+                'department_id' => $filters['filter_department_id'],
+            ],
             'role' => $role,
         ]);
     }

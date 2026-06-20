@@ -7,6 +7,8 @@ import {
     ChevronDownIcon,
     ChevronUpIcon,
     ExclamationTriangleIcon,
+    BuildingOffice2Icon,
+    FireIcon,
     FunnelIcon,
     LightBulbIcon,
     RectangleGroupIcon,
@@ -26,15 +28,20 @@ const expanded = ref(props.groups[0]?.group_key ?? null);
 const status = ref(props.filters.status ?? 'all');
 const categoryId = ref(props.filters.category_id ?? '');
 const minimumSize = ref(props.filters.minimum_group_size ?? 2);
+const departmentId = ref(props.filters.department_id ?? '');
 
 const routeName = computed(() => `${props.role}.recurring-issues`);
 const departmentNames = computed(() => Object.fromEntries(
     props.departments.map((department) => [department.id, department.name])
 ));
+const priorityGroups = computed(() => props.groups.filter((group) =>
+    ['critical', 'high'].includes(group.investigation_level)
+));
 
 const applyFilters = () => router.get(route(routeName.value), {
     status: status.value,
     category_id: categoryId.value || undefined,
+    department_id: departmentId.value || undefined,
     minimum_group_size: minimumSize.value,
 }, {}, { preserveState: true, preserveScroll: true });
 
@@ -48,6 +55,12 @@ const statusClass = (value) => ({
     under_review: 'bg-amber-50 text-amber-700',
     submitted: 'bg-blue-50 text-blue-700',
 }[value] ?? 'bg-slate-100 text-slate-600');
+const investigationClass = (level) => ({
+    critical: 'border-red-200 bg-red-50 text-red-700',
+    high: 'border-orange-200 bg-orange-50 text-orange-700',
+    moderate: 'border-amber-200 bg-amber-50 text-amber-700',
+    watch: 'border-slate-200 bg-slate-50 text-slate-600',
+}[level] ?? 'border-slate-200 bg-slate-50 text-slate-600');
 </script>
 
 <template>
@@ -66,21 +79,29 @@ const statusClass = (value) => ({
             </div>
         </div>
 
-        <section class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <section class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <MetricCard label="Feedback analysed" :value="summary.feedbacks_analysed ?? 0" :icon="ArrowPathRoundedSquareIcon" tone="blue" />
             <MetricCard label="Recurring groups" :value="summary.recurring_groups ?? 0" :icon="RectangleGroupIcon" tone="violet" />
             <MetricCard label="Grouped feedback" :value="summary.grouped_feedbacks ?? 0" :icon="FunnelIcon" tone="amber" />
             <MetricCard label="Groups with solutions" :value="summary.groups_with_solution ?? 0" :icon="LightBulbIcon" tone="emerald" />
+            <MetricCard label="Priority investigations" :value="summary.priority_investigations ?? 0" :icon="FireIcon" tone="rose" />
         </section>
 
         <section class="mt-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-[1fr_1fr_1fr_auto]">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
                 <label class="text-xs font-bold text-slate-600">
                     Status
                     <select v-model="status" class="mt-1.5 w-full rounded-lg border-slate-200 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="all">All statuses</option>
                         <option value="open">Open feedback</option>
                         <option value="resolved">Resolved feedback</option>
+                    </select>
+                </label>
+                <label v-if="role !== 'hod'" class="text-xs font-bold text-slate-600">
+                    Department
+                    <select v-model="departmentId" class="mt-1.5 w-full rounded-lg border-slate-200 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">All departments</option>
+                        <option v-for="department in departments" :key="department.id" :value="department.id">{{ department.name }}</option>
                     </select>
                 </label>
                 <label class="text-xs font-bold text-slate-600">
@@ -105,6 +126,44 @@ const statusClass = (value) => ({
             </div>
         </section>
 
+        <section v-if="priorityGroups.length" class="mt-5 rounded-xl border border-red-100 bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-red-600"><FireIcon class="h-5 w-5" /></div>
+                <div>
+                    <h2 class="text-sm font-black text-slate-950">Priority Investigations</h2>
+                    <p class="mt-0.5 text-xs text-slate-500">Repeated open, urgent or escalated concerns requiring closer investigation.</p>
+                </div>
+            </div>
+            <div class="mt-4 grid gap-3 lg:grid-cols-2">
+                <button
+                    v-for="group in priorityGroups"
+                    :key="`priority-${group.group_key}`"
+                    type="button"
+                    class="rounded-xl border border-slate-200 p-4 text-left transition hover:border-red-200 hover:bg-red-50/30"
+                    @click="expanded = group.group_key"
+                >
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-black text-slate-900">{{ group.title }}</p>
+                            <p class="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+                                <BuildingOffice2Icon class="h-4 w-4" />
+                                {{ departmentNames[group.department_id] ?? `Department #${group.department_id ?? '—'}` }}
+                            </p>
+                        </div>
+                        <span class="rounded-md border px-2 py-1 text-[10px] font-black uppercase" :class="investigationClass(group.investigation_level)">
+                            {{ group.investigation_level }}
+                        </span>
+                    </div>
+                    <div class="mt-3 flex items-center gap-4 text-xs">
+                        <span class="font-bold text-slate-700">{{ group.feedback_count }} reports</span>
+                        <span class="font-bold text-amber-600">{{ group.open_count }} open</span>
+                        <span v-if="group.urgent_count" class="font-bold text-red-600">{{ group.urgent_count }} urgent</span>
+                        <span class="ml-auto font-black text-slate-400">Score {{ group.investigation_score }}</span>
+                    </div>
+                </button>
+            </div>
+        </section>
+
         <section v-if="groups.length" class="mt-5 space-y-3">
             <article v-for="group in groups" :key="group.group_key" class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <button
@@ -114,6 +173,13 @@ const statusClass = (value) => ({
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="rounded-md bg-blue-50 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-blue-700">{{ group.category }}</span>
+                            <span class="flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">
+                                <BuildingOffice2Icon class="h-3.5 w-3.5" />
+                                {{ departmentNames[group.department_id] ?? `Department #${group.department_id ?? '—'}` }}
+                            </span>
+                            <span class="rounded-md border px-2 py-1 text-[10px] font-black uppercase" :class="investigationClass(group.investigation_level)">
+                                {{ group.investigation_level }}
+                            </span>
                             <span v-if="group.urgent_count" class="flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[10px] font-black text-red-700">
                                 <ExclamationTriangleIcon class="h-3.5 w-3.5" />{{ group.urgent_count }} urgent
                             </span>

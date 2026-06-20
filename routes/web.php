@@ -37,6 +37,8 @@ Route::middleware('auth.session')->group(function () {
         ->name('communications.index');
     Route::post('/communications', [CommunicationController::class, 'store'])
         ->name('communications.store');
+    Route::post('/communications/read', [CommunicationController::class, 'markRead'])
+        ->name('communications.read');
     Route::get('/change-password',  [AuthenticatedSessionController::class, 'showChangePassword'])->name('password.change');
     Route::post('/change-password', [AuthenticatedSessionController::class, 'updatePassword'])->name('password.update');
 });
