@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import MetricCard from '@/Components/MetricCard.vue';
+import SubmissionTrendChart from '@/Components/SubmissionTrendChart.vue';
 import { UserGroupIcon, BookOpenIcon, BuildingOffice2Icon, CheckCircleIcon, ClockIcon, StarIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -32,8 +33,6 @@ const ratingBg = (v) => {
 };
 
 const barWidth = (v, max = 5) => Math.round((v / max) * 100) + '%';
-const maxTrend = computed(() => Math.max(...props.trends.map(t => t.count), 1));
-
 const getFacultyName = (id) => props.faculties.find(f => f.id == id)?.name ?? `Faculty #${id}`;
 const systemAvg = computed(() => props.overview?.system_averages ?? {});
 </script>
@@ -147,24 +146,7 @@ const systemAvg = computed(() => props.overview?.system_averages ?? {});
                 </div>
 
                 <!-- Trend chart -->
-                <div v-if="trends.length > 0" class="rounded-xl border border-gray-200 bg-white p-5">
-                    <h3 class="text-sm font-semibold text-gray-800 mb-4">Daily Submission Trend</h3>
-                    <div class="flex items-end gap-1 h-24">
-                        <div v-for="t in trends" :key="t.date"
-                            class="flex-1 flex flex-col items-center group relative">
-                            <div class="w-full rounded-t bg-indigo-400 hover:bg-indigo-600 transition"
-                                :style="{ height: Math.max(4, Math.round((t.count / maxTrend) * 88)) + 'px' }">
-                            </div>
-                            <div class="absolute bottom-full mb-1 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-1.5 py-0.5 whitespace-nowrap z-10">
-                                {{ t.count }} — {{ t.date }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-between mt-2 text-xs text-gray-400">
-                        <span>{{ trends[0]?.date }}</span>
-                        <span>{{ trends[trends.length - 1]?.date }}</span>
-                    </div>
-                </div>
+                <SubmissionTrendChart :trends="trends" title="Daily Evaluation Submission Trend" />
 
                 <!-- Faculty comparison -->
                 <div v-if="byFaculty.length > 0" class="rounded-xl border border-gray-200 bg-white overflow-hidden">

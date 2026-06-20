@@ -3,6 +3,7 @@ import RectorLayout from '@/Layouts/RectorLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
 import MetricCard from '@/Components/MetricCard.vue';
+import SubmissionTrendChart from '@/Components/SubmissionTrendChart.vue';
 import { UserGroupIcon, BookOpenIcon, BuildingOffice2Icon, CheckCircleIcon, ClockIcon, StarIcon, InboxIcon, ArrowUpRightIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -36,14 +37,6 @@ const resolutionRate = computed(() => {
     const r = props.feedbackStats.resolved ?? 0;
     return t > 0 ? Math.round((r / t) * 100) : 0;
 });
-
-const maxTrend = computed(() =>
-    Math.max(...(props.trends.map(t => t.count)), 1)
-);
-
-// Chart bar heights
-const trendBarHeight = (count) =>
-    Math.max(4, Math.round((count / maxTrend.value) * 100)) + 'px';
 
 const systemAvg = computed(() =>
     props.overview?.system_averages ?? {}
@@ -180,27 +173,7 @@ const systemAvg = computed(() =>
                 </div>
 
                 <!-- Submission trend chart -->
-                <div v-if="trends.length > 0" class="rounded-xl border border-gray-200 bg-white p-5">
-                    <h3 class="text-sm font-semibold text-gray-800 mb-4">Evaluation Submissions Over Time</h3>
-                    <div class="flex items-end gap-1 h-32">
-                        <div v-for="t in trends" :key="t.date"
-                            class="flex-1 flex flex-col items-center gap-1 group">
-                            <div class="relative w-full">
-                                <div class="w-full rounded-t bg-indigo-500 hover:bg-indigo-600 transition cursor-default"
-                                    :style="{ height: Math.max(4, Math.round((t.count / maxTrend) * 112)) + 'px' }">
-                                </div>
-                                <!-- Tooltip -->
-                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:flex bg-gray-800 text-white text-xs rounded px-1.5 py-0.5 whitespace-nowrap">
-                                    {{ t.count }} on {{ t.date }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-between mt-2">
-                        <span class="text-xs text-gray-400">{{ trends[0]?.date }}</span>
-                        <span class="text-xs text-gray-400">{{ trends[trends.length - 1]?.date }}</span>
-                    </div>
-                </div>
+                <SubmissionTrendChart :trends="trends" />
 
                 <!-- Faculty comparison -->
                 <div v-if="byFaculty.length > 0" class="rounded-xl border border-gray-200 bg-white overflow-hidden">
