@@ -2,7 +2,18 @@
 import DeanLayout from '@/Layouts/DeanLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { ArrowRightIcon, ChatBubbleLeftRightIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline';
+import MetricCard from '@/Components/MetricCard.vue';
+import {
+    ArrowRightIcon,
+    ChatBubbleLeftRightIcon,
+    ShieldCheckIcon,
+    InboxIcon,
+    PaperAirplaneIcon,
+    ClockIcon,
+    ArrowUpRightIcon,
+    CheckCircleIcon,
+    ExclamationTriangleIcon,
+} from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     stats:      { type: Object, default: () => ({}) },
@@ -52,21 +63,20 @@ const ratingColor = (v) => {
         </template>
 
         <div class="mx-auto max-w-7xl space-y-6 px-4 py-8">
-            <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-800 p-6 text-white shadow-2xl shadow-indigo-200 sm:p-8">
-                <div class="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-purple-400/20 blur-3xl"></div>
-                <div class="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+            <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
                     <div>
-                        <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-indigo-100">
-                            <ShieldCheckIcon class="h-4 w-4" /> Faculty command centre
+                        <div class="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-violet-600">
+                            <ShieldCheckIcon class="h-4 w-4" /> Faculty overview
                         </div>
-                        <h2 class="max-w-2xl text-2xl font-black tracking-tight sm:text-4xl">Lead the faculty with clear, anonymous insight.</h2>
-                        <p class="mt-3 max-w-2xl text-sm leading-6 text-indigo-100">Review priority feedback, coordinate with HODs, and turn recurring concerns into accountable action.</p>
+                        <h2 class="text-2xl font-black tracking-tight text-slate-950">Faculty feedback and evaluation overview</h2>
+                        <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Review priority feedback, coordinate with HODs, and follow resolution progress.</p>
                     </div>
                     <div class="flex flex-wrap gap-3">
-                        <button @click="router.visit(route('dean.feedbacks'))" class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-indigo-900 shadow-lg">
+                        <button @click="router.visit(route('dean.feedbacks'))" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700">
                             Open inbox <ArrowRightIcon class="h-4 w-4" />
                         </button>
-                        <button @click="router.visit(route('communications.index'))" class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white hover:bg-white/20">
+                        <button @click="router.visit(route('communications.index'))" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">
                             <ChatBubbleLeftRightIcon class="h-5 w-5" /> Communication
                         </button>
                     </div>
@@ -77,30 +87,12 @@ const ratingColor = (v) => {
             <div>
                 <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Faculty Feedback Overview</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
-                        <p class="text-2xl font-black text-gray-900">{{ stats.total ?? 0 }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">Total</p>
-                    </div>
-                    <div class="rounded-xl border border-blue-100 bg-blue-50 p-4 text-center">
-                        <p class="text-2xl font-black text-blue-700">{{ stats.submitted ?? 0 }}</p>
-                        <p class="text-xs text-blue-500 mt-0.5">New</p>
-                    </div>
-                    <div class="rounded-xl border border-yellow-100 bg-yellow-50 p-4 text-center">
-                        <p class="text-2xl font-black text-yellow-700">{{ stats.under_review ?? 0 }}</p>
-                        <p class="text-xs text-yellow-500 mt-0.5">In Review</p>
-                    </div>
-                    <div class="rounded-xl border border-orange-100 bg-orange-50 p-4 text-center">
-                        <p class="text-2xl font-black text-orange-700">{{ stats.escalated ?? 0 }}</p>
-                        <p class="text-xs text-orange-500 mt-0.5">Escalated</p>
-                    </div>
-                    <div class="rounded-xl border border-green-100 bg-green-50 p-4 text-center">
-                        <p class="text-2xl font-black text-green-700">{{ stats.resolved ?? 0 }}</p>
-                        <p class="text-xs text-green-500 mt-0.5">Resolved</p>
-                    </div>
-                    <div class="rounded-xl border border-red-100 bg-red-50 p-4 text-center">
-                        <p class="text-2xl font-black text-red-700">{{ stats.urgent ?? 0 }}</p>
-                        <p class="text-xs text-red-500 mt-0.5">Urgent</p>
-                    </div>
+                    <MetricCard label="Total feedback" :value="stats.total" :icon="InboxIcon" tone="blue" />
+                    <MetricCard label="New submissions" :value="stats.submitted" :icon="PaperAirplaneIcon" tone="indigo" />
+                    <MetricCard label="In review" :value="stats.under_review" :icon="ClockIcon" tone="amber" />
+                    <MetricCard label="Escalated" :value="stats.escalated" :icon="ArrowUpRightIcon" tone="orange" />
+                    <MetricCard label="Resolved" :value="stats.resolved" :icon="CheckCircleIcon" tone="emerald" />
+                    <MetricCard label="Urgent" :value="stats.urgent" :icon="ExclamationTriangleIcon" tone="rose" />
                 </div>
             </div>
 

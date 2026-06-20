@@ -274,7 +274,7 @@ class DeanController extends Controller
     }
 
     // ── Evaluations for THIS dean's faculty ───────────────────
-    public function evaluations(): Response
+    public function evaluations(Request $request): Response
     {
         $facultyId = $this->getFacultyId();
         $user      = session('user');
@@ -290,7 +290,10 @@ class DeanController extends Controller
         $activeWindow = null;
 
         if (!empty($windows) && $facultyId) {
-            $activeWindow = collect($windows)->firstWhere('is_open', true);
+            $requestedWindowId = (int) $request->query('window_id', 0);
+            $activeWindow = collect($windows)->firstWhere('id', $requestedWindowId)
+                ?? collect($windows)->firstWhere('is_open', true)
+                ?? collect($windows)->first();
             if ($activeWindow) {
                 try {
                     $resp    = Http::timeout(5)->get($this->feedbackApiUrl('evaluations/faculty'), [
