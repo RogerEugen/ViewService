@@ -2,6 +2,8 @@
 import HodLayout from '@/Layouts/HodLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import MetricCard from '@/Components/MetricCard.vue';
+import { BookOpenIcon, ChatBubbleLeftRightIcon, StarIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     windows:       { type: Array,  default: () => [] },
@@ -44,6 +46,10 @@ const deptAvg = computed(() => {
 const totalResponses = computed(() =>
     props.results.reduce((s, r) => s + r.total_responses, 0)
 );
+
+const changeWindow = () => router.get(route('hod.evaluations'), {
+    window_id: selectedWindow.value,
+}, { preserveScroll: true });
 </script>
 
 <template>
@@ -60,9 +66,17 @@ const totalResponses = computed(() =>
         </template>
 
         <div class="py-8 px-4 max-w-6xl mx-auto space-y-6">
+            <div class="flex justify-end">
+                <select v-model="selectedWindow" @change="changeWindow"
+                    class="rounded-xl border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option v-for="windowItem in windows" :key="windowItem.id" :value="windowItem.id">
+                        {{ windowItem.title }} · Semester {{ windowItem.semester }}
+                    </option>
+                </select>
+            </div>
 
             <!-- Active window banner -->
-            <div v-if="activeWindow" class="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-4 text-white">
+            <div v-if="activeWindow" class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
@@ -70,14 +84,14 @@ const totalResponses = computed(() =>
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
                             </span>
-                            <span class="text-xs text-indigo-200">Currently Active</span>
+                            <span class="text-xs font-semibold text-emerald-600">Selected evaluation period</span>
                         </div>
                         <h3 class="font-bold">{{ activeWindow.title }}</h3>
-                        <p class="text-xs text-indigo-200">{{ activeWindow.academic_year }} — Semester {{ activeWindow.semester }}</p>
+                        <p class="text-xs text-slate-500">{{ activeWindow.academic_year }} — Semester {{ activeWindow.semester }}</p>
                     </div>
                     <div class="text-right">
                         <p class="text-3xl font-black">{{ results.length }}</p>
-                        <p class="text-xs text-indigo-200">Courses with results</p>
+                        <p class="text-xs text-slate-500">Courses with results</p>
                     </div>
                 </div>
             </div>
@@ -89,18 +103,9 @@ const totalResponses = computed(() =>
 
             <!-- Department summary stats -->
             <div v-if="results.length > 0" class="grid grid-cols-3 gap-4">
-                <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 text-center">
-                    <p class="text-2xl font-black text-indigo-600">{{ results.length }}</p>
-                    <p class="text-xs text-gray-400">Courses Evaluated</p>
-                </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 text-center">
-                    <p class="text-2xl font-black text-blue-600">{{ totalResponses }}</p>
-                    <p class="text-xs text-gray-400">Total Responses</p>
-                </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 text-center">
-                    <p class="text-2xl font-black" :class="ratingColor(+deptAvg)">{{ deptAvg }}</p>
-                    <p class="text-xs text-gray-400">Dept Average /5</p>
-                </div>
+                <MetricCard label="Courses evaluated" :value="results.length" :icon="BookOpenIcon" tone="indigo" />
+                <MetricCard label="Total responses" :value="totalResponses" :icon="ChatBubbleLeftRightIcon" tone="blue" />
+                <MetricCard label="Department average /5" :value="deptAvg" :icon="StarIcon" tone="amber" />
             </div>
 
             <!-- Threshold notice -->

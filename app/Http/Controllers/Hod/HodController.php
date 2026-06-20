@@ -224,7 +224,7 @@ class HodController extends Controller
         return back()->with('success', 'Feedback marked as resolved.');
     }
 
-    public function evaluations(): Response
+public function evaluations(Request $request): Response
 {
     $departmentId = session('department_id');
     $user         = session('user');
@@ -241,7 +241,10 @@ class HodController extends Controller
 
     if (!empty($windows)) {
         try {
-            $activeWindow = collect($windows)->firstWhere('is_open', true);
+            $requestedWindowId = (int) $request->query('window_id', 0);
+            $activeWindow = collect($windows)->firstWhere('id', $requestedWindowId)
+                ?? collect($windows)->firstWhere('is_open', true)
+                ?? collect($windows)->first();
             if ($activeWindow) {
                 $resp    = Http::timeout(5)->get($this->feedbackApiUrl('evaluations/department'), [
                     'department_id' => $departmentId,
