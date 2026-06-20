@@ -113,6 +113,11 @@ const selectedCategoryGuide = computed(() => {
     return 'Example: briefly describe the issue, when and where it happened, and its impact on you or the class.';
 });
 
+const languageViolationEscalated = computed(() =>
+    String(form.errors.content ?? '').toLowerCase().includes('identity')
+    || String(form.errors.content ?? '').toLowerCase().includes('second language violation')
+);
+
 // SVG circle countdown
 const radius      = 22;
 const circumference = 2 * Math.PI * radius;
@@ -344,6 +349,23 @@ const dashOffset  = computed(() =>
                     </div>
 
                     <form @submit.prevent="submit" class="space-y-5">
+                        <div
+                            v-if="form.errors.content"
+                            class="flex items-start gap-3 rounded-xl border px-4 py-3"
+                            :class="languageViolationEscalated
+                                ? 'border-red-200 bg-red-50 text-red-800'
+                                : 'border-amber-200 bg-amber-50 text-amber-800'"
+                        >
+                            <svg class="mt-0.5 h-5 w-5 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-1.5a9 9 0 11-18 0 9 9 0 0118 0zM12 15.75h.007v.008H12v-.008z"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-bold">
+                                    {{ languageViolationEscalated ? 'Identity review created' : 'Message blocked' }}
+                                </p>
+                                <p class="mt-1 text-xs leading-5">{{ form.errors.content }}</p>
+                            </div>
+                        </div>
 
                         <!-- Category -->
                         <div>
