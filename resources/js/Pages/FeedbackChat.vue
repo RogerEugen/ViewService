@@ -18,6 +18,7 @@ const props = defineProps({
     threads: { type: Array, default: () => [] },
     thread: { type: Object, default: null },
     error: { type: String, default: null },
+    errorCode: { type: String, default: null },
 });
 
 const Layout = computed(() => props.currentRole === 'lecturer' ? LectureLayout : RectorLayout);
@@ -125,7 +126,7 @@ const connectRealtime = () => {
         (event) => {
             if (event?.message?.sender_role !== props.currentRole) playNotification();
             router.reload({
-                only: ['thread', 'threads'],
+                only: ['thread', 'threads', 'error', 'errorCode', 'selectedCode'],
                 preserveScroll: true,
                 onSuccess: scrollToLatest,
             });
@@ -361,11 +362,17 @@ onUnmounted(() => stopRealtime());
 
                     <div v-else class="grid flex-1 place-items-center p-8 text-center">
                         <div class="max-w-sm">
-                            <div class="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-blue-100">
-                                <KeyIcon class="h-8 w-8 text-blue-700" />
+                            <div
+                                class="mx-auto grid h-16 w-16 place-items-center rounded-2xl"
+                                :class="errorCode === 'ISSUE_RESOLVED' ? 'bg-emerald-100' : 'bg-blue-100'"
+                            >
+                                <ShieldCheckIcon v-if="errorCode === 'ISSUE_RESOLVED'" class="h-8 w-8 text-emerald-700" />
+                                <KeyIcon v-else class="h-8 w-8 text-blue-700" />
                             </div>
                             <p class="mt-5 text-lg font-black text-slate-900">
-                                {{ isLecturer ? 'Enter your tracking code' : 'Select a lecturer thread' }}
+                                {{ errorCode === 'ISSUE_RESOLVED'
+                                    ? 'Your issue is resolved'
+                                    : (isLecturer ? 'Enter your tracking code' : 'Select a lecturer thread') }}
                             </p>
                             <p class="mt-2 text-sm leading-6 text-slate-500">
                                 {{ error || (isLecturer

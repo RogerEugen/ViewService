@@ -16,6 +16,7 @@ class FeedbackChatController extends Controller
         $code = strtoupper(trim((string) $request->query('code', '')));
         $thread = null;
         $error = null;
+        $errorCode = null;
 
         if ($code !== '') {
             if (!TokenService::refreshAnonToken()) {
@@ -34,6 +35,7 @@ class FeedbackChatController extends Controller
                         $thread = $response->json('thread');
                     } else {
                         $error = $response->json('message', 'The tracking code could not be opened.');
+                        $errorCode = $response->json('code');
                     }
                 } catch (\Throwable) {
                     $error = 'The feedback service is temporarily unavailable.';
@@ -47,6 +49,7 @@ class FeedbackChatController extends Controller
             'threads' => [],
             'thread' => $thread,
             'error' => $error,
+            'errorCode' => $errorCode,
         ]);
     }
 
@@ -76,7 +79,7 @@ class FeedbackChatController extends Controller
 
         if (!$response->successful()) {
             return back()->withErrors([
-                'message' => $response->json('message', 'The message could not be sent.'),
+                'message' => $this->responseError($response, 'The message could not be sent.'),
             ]);
         }
 
@@ -88,6 +91,7 @@ class FeedbackChatController extends Controller
         $threads = [];
         $thread = null;
         $error = null;
+        $errorCode = null;
 
         try {
             $response = $this->serviceClient()->get($this->feedbackUrl('rector/lecturer-threads'));
@@ -98,7 +102,11 @@ class FeedbackChatController extends Controller
             $error = 'The feedback service is temporarily unavailable.';
         }
 
-        $code = strtoupper(trim((string) $request->query('code', $threads[0]['tracking_code'] ?? '')));
+        $requestedCode = strtoupper(trim((string) $request->query('code', '')));
+        $activeCodes = collect($threads)->pluck('tracking_code');
+        $code = $activeCodes->contains($requestedCode)
+            ? $requestedCode
+            : (string) ($threads[0]['tracking_code'] ?? '');
         if ($code !== '') {
             try {
                 $response = $this->serviceClient()->get(
@@ -108,6 +116,7 @@ class FeedbackChatController extends Controller
                     $thread = $response->json('thread');
                 } else {
                     $error = $response->json('message', 'The selected thread could not be opened.');
+                    $errorCode = $response->json('code');
                 }
             } catch (\Throwable) {
                 $error = 'The selected thread could not be loaded.';
@@ -120,6 +129,7 @@ class FeedbackChatController extends Controller
             'threads' => $threads,
             'thread' => $thread,
             'error' => $error,
+            'errorCode' => $errorCode,
         ]);
     }
 
@@ -141,7 +151,7 @@ class FeedbackChatController extends Controller
 
         if (!$response->successful()) {
             return back()->withErrors([
-                'message' => $response->json('message', 'The reply could not be sent.'),
+                'message' => $this->responseError($response, 'The reply could not be sent.'),
             ]);
         }
 
@@ -158,5 +168,14 @@ class FeedbackChatController extends Controller
     private function feedbackUrl(string $path): string
     {
         return rtrim(config('services.feedback_service.url'), '/') . '/api/' . ltrim($path, '/');
+    }
+
+    private function responseError($response, string $fallback): string
+    {
+        return (string) (
+            $response->json('message')
+            ?? $response->json('errors.message.0')
+            ?? $fallback
+        );
     }
 }
