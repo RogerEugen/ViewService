@@ -133,10 +133,10 @@ const goToFeedback = () => router.visit(route('lecture.feedback'));
                     </div>
 
                     <div class="space-y-4">
-                        <div class="rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 p-5 text-white">
-                            <p class="text-xs text-purple-200 mb-1">Welcome back,</p>
-                            <h3 class="text-lg font-bold">{{ firstName }}</h3>
-                            <p class="text-xs text-purple-200 mt-1">{{ profile.department ?? 'Lecturer' }}</p>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <p class="mb-1 text-xs text-slate-400">Lecturer profile</p>
+                            <h3 class="text-lg font-bold text-slate-950">{{ firstName }}</h3>
+                            <p class="mt-1 text-xs text-slate-500">{{ profile.department ?? 'Lecturer' }}</p>
                         </div>
 
                         <div class="rounded-2xl border border-gray-200 bg-white p-5">

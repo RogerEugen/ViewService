@@ -1,13 +1,16 @@
 <script setup>
 import LectureLayout from '@/Layouts/LectureLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import MetricCard from '@/Components/MetricCard.vue';
+import { StarIcon, ChatBubbleLeftRightIcon, BookOpenIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     windows:       { type: Array,  default: () => [] },
     results:       { type: Array,  default: () => [] },
     department_id: { type: Number, default: null },
     lecturer_id:   { type: Number, default: null },   // ✅ NEW
+    selectedWindow:{ type: Object, default: null },
     user:          { type: Object, default: () => ({}) },
 });
 
@@ -27,7 +30,11 @@ const ratingBg = (avg) => {
 
 const barWidth = (avg) => Math.round((avg / 5) * 100) + '%';
 
-const activeWindow = computed(() => props.windows.find(w => w.is_open));
+const activeWindow = computed(() => props.selectedWindow ?? props.windows.find(w => w.is_open) ?? props.windows[0]);
+const selectedWindowId = ref(activeWindow.value?.id ?? null);
+const changeWindow = () => router.get(route('lecture.evaluations'), {
+    window_id: selectedWindowId.value,
+}, { preserveScroll: true });
 
 // Grade label
 const gradeLabel = (avg) => {
@@ -47,18 +54,26 @@ const gradeLabel = (avg) => {
         </template>
 
         <div class="py-8 px-4 max-w-6xl mx-auto space-y-6">
+            <div class="flex justify-end">
+                <select v-model="selectedWindowId" @change="changeWindow"
+                    class="rounded-xl border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option v-for="windowItem in windows" :key="windowItem.id" :value="windowItem.id">
+                        {{ windowItem.title }} · Semester {{ windowItem.semester }}
+                    </option>
+                </select>
+            </div>
 
             <!-- Active window -->
-            <div v-if="activeWindow" class="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-4 text-white">
+            <div v-if="activeWindow" class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="relative flex h-2.5 w-2.5">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400"></span>
                     </span>
-                    <p class="text-xs font-semibold text-purple-200">Currently Open</p>
+                    <p class="text-xs font-semibold text-emerald-600">Selected evaluation period</p>
                 </div>
                 <h3 class="font-bold">{{ activeWindow.title }}</h3>
-                <p class="text-xs text-purple-200">{{ activeWindow.academic_year }} — Semester {{ activeWindow.semester }}</p>
+                <p class="text-xs text-slate-500">{{ activeWindow.academic_year }} — Semester {{ activeWindow.semester }}</p>
             </div>
 
             <!-- Personal info banner -->
@@ -108,22 +123,9 @@ const gradeLabel = (avg) => {
 
                 <!-- Summary row -->
                 <div v-if="results.length > 1" class="grid grid-cols-3 gap-4">
-                    <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 text-center">
-                        <p class="text-2xl font-black text-indigo-600">
-                            {{ (results.reduce((s, r) => s + r.avg_overall, 0) / results.length).toFixed(1) }}
-                        </p>
-                        <p class="text-xs text-gray-400">Overall Avg</p>
-                    </div>
-                    <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 text-center">
-                        <p class="text-2xl font-black text-blue-600">
-                            {{ results.reduce((s, r) => s + r.total_responses, 0) }}
-                        </p>
-                        <p class="text-xs text-gray-400">Total Responses</p>
-                    </div>
-                    <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 text-center">
-                        <p class="text-2xl font-black text-purple-600">{{ results.length }}</p>
-                        <p class="text-xs text-gray-400">Courses</p>
-                    </div>
+                    <MetricCard label="Overall average /5" :value="(results.reduce((s, r) => s + r.avg_overall, 0) / results.length).toFixed(1)" :icon="StarIcon" tone="amber" />
+                    <MetricCard label="Total responses" :value="results.reduce((s, r) => s + r.total_responses, 0)" :icon="ChatBubbleLeftRightIcon" tone="blue" />
+                    <MetricCard label="Courses" :value="results.length" :icon="BookOpenIcon" tone="indigo" />
                 </div>
 
                 <!-- Individual course cards -->

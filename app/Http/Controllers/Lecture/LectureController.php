@@ -198,7 +198,7 @@ class LectureController extends Controller
 
 
 
-    public function evaluationResults(): Response
+    public function evaluationResults(Request $request): Response
 {
     $user         = session('user');
     $departmentId = session('department_id');
@@ -232,15 +232,19 @@ class LectureController extends Controller
 
     // Get results filtered by THIS lecturer's ID only
     $results = [];
+    $selectedWindow = null;
     if ($departmentId && !empty($windows)) {
         try {
-            $activeWindow = collect($windows)->firstWhere('is_open', true);
-            if ($activeWindow) {
+            $requestedWindowId = (int) $request->query('window_id', 0);
+            $selectedWindow = collect($windows)->firstWhere('id', $requestedWindowId)
+                ?? collect($windows)->firstWhere('is_open', true)
+                ?? collect($windows)->first();
+            if ($selectedWindow) {
                 $resp = Http::timeout(5)
                     ->get($this->feedbackApiUrl('evaluations/lecturer'), [
                         'department_id' => $departmentId,
                         'lecturer_id'   => $lecturerId,  // ✅ filter by THIS lecturer
-                        'window_id'     => $activeWindow['id'],
+                        'window_id'     => $selectedWindow['id'],
                     ]);
                 $results = $resp->successful() ? $resp->json('analytics', []) : [];
             }
@@ -254,6 +258,7 @@ class LectureController extends Controller
         'results'       => $results,
         'department_id' => $departmentId,
         'lecturer_id'   => $lecturerId,
+        'selectedWindow' => $selectedWindow,
         'user'          => $user,
     ]);
 }
