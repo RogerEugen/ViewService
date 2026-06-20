@@ -1,6 +1,8 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
+import MetricCard from '@/Components/MetricCard.vue';
+import { InboxIcon, PaperAirplaneIcon, ClockIcon, ArrowUpRightIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     stats:          { type: Object, default: () => ({}) },
@@ -41,20 +43,20 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString() : '—';
         <div class="py-8 px-4 max-w-6xl mx-auto space-y-6">
 
             <!-- Welcome banner -->
-            <div class="rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 px-6 py-6 text-white">
+            <div class="rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-bold">Welcome, {{ user?.name ?? 'Admin' }}</h3>
-                        <p class="text-sm text-gray-300 mt-0.5">
+                        <h3 class="text-lg font-bold text-slate-950">System overview</h3>
+                        <p class="mt-0.5 text-sm text-slate-500">
                             You have
-                            <strong class="text-white">{{ stats.feedback?.submitted ?? 0 }}</strong>
+                            <strong class="text-blue-700">{{ stats.feedback?.submitted ?? 0 }}</strong>
                             new feedbacks and
-                            <strong class="text-yellow-400">{{ stats.feedback?.urgent ?? 0 }}</strong>
+                            <strong class="text-rose-600">{{ stats.feedback?.urgent ?? 0 }}</strong>
                             urgent issues requiring attention
                         </p>
                     </div>
-                    <div class="hidden sm:flex h-16 w-16 items-center justify-center rounded-full bg-white/10">
-                        <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <div class="hidden h-16 w-16 items-center justify-center rounded-full bg-blue-50 sm:flex">
+                        <svg class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
                         </svg>
                     </div>
@@ -99,30 +101,12 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString() : '—';
             <div>
                 <h3 class="text-sm font-semibold text-gray-600 mb-3">Campus Feedback Overview</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
-                        <p class="text-2xl font-bold text-gray-900">{{ stats.feedback?.total }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">Total</p>
-                    </div>
-                    <div class="rounded-xl border border-blue-100 bg-blue-50 p-4 text-center">
-                        <p class="text-2xl font-bold text-blue-700">{{ stats.feedback?.submitted }}</p>
-                        <p class="text-xs text-blue-500 mt-0.5">New</p>
-                    </div>
-                    <div class="rounded-xl border border-yellow-100 bg-yellow-50 p-4 text-center">
-                        <p class="text-2xl font-bold text-yellow-700">{{ stats.feedback?.under_review }}</p>
-                        <p class="text-xs text-yellow-500 mt-0.5">In Review</p>
-                    </div>
-                    <div class="rounded-xl border border-orange-100 bg-orange-50 p-4 text-center">
-                        <p class="text-2xl font-bold text-orange-700">{{ stats.feedback?.escalated }}</p>
-                        <p class="text-xs text-orange-500 mt-0.5">Escalated</p>
-                    </div>
-                    <div class="rounded-xl border border-green-100 bg-green-50 p-4 text-center">
-                        <p class="text-2xl font-bold text-green-700">{{ stats.feedback?.resolved }}</p>
-                        <p class="text-xs text-green-500 mt-0.5">Resolved</p>
-                    </div>
-                    <div class="rounded-xl border border-red-100 bg-red-50 p-4 text-center">
-                        <p class="text-2xl font-bold text-red-700">{{ stats.feedback?.urgent }}</p>
-                        <p class="text-xs text-red-500 mt-0.5">Urgent</p>
-                    </div>
+                    <MetricCard label="Total feedback" :value="stats.feedback?.total" :icon="InboxIcon" tone="blue" />
+                    <MetricCard label="New submissions" :value="stats.feedback?.submitted" :icon="PaperAirplaneIcon" tone="indigo" />
+                    <MetricCard label="In review" :value="stats.feedback?.under_review" :icon="ClockIcon" tone="amber" />
+                    <MetricCard label="Escalated" :value="stats.feedback?.escalated" :icon="ArrowUpRightIcon" tone="orange" />
+                    <MetricCard label="Resolved" :value="stats.feedback?.resolved" :icon="CheckCircleIcon" tone="emerald" />
+                    <MetricCard label="Urgent" :value="stats.feedback?.urgent" :icon="ExclamationTriangleIcon" tone="rose" />
                 </div>
             </div>
 

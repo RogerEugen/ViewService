@@ -2,6 +2,8 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import MetricCard from '@/Components/MetricCard.vue';
+import { UserGroupIcon, BookOpenIcon, BuildingOffice2Icon, CheckCircleIcon, ClockIcon, StarIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     windows:       { type: Array,  default: () => [] },
@@ -59,48 +61,28 @@ const systemAvg = computed(() => props.overview?.system_averages ?? {});
             <template v-if="activeWindow">
 
                 <!-- Window banner -->
-                <div class="rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 px-5 py-4 text-white">
+                <div class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-gray-400 mb-1">Analyzing</p>
+                            <p class="mb-1 text-xs font-semibold text-emerald-600">Selected evaluation period</p>
                             <h3 class="font-bold">{{ activeWindow.title }}</h3>
-                            <p class="text-xs text-gray-400">{{ activeWindow.academic_year }} — Semester {{ activeWindow.semester }}</p>
+                            <p class="text-xs text-slate-500">{{ activeWindow.academic_year }} — Semester {{ activeWindow.semester }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-3xl font-black text-white">{{ overview.total_evaluations ?? 0 }}</p>
-                            <p class="text-xs text-gray-400">Total Submissions</p>
+                            <p class="text-3xl font-black text-slate-950">{{ overview.total_evaluations ?? 0 }}</p>
+                            <p class="text-xs text-slate-500">Total Submissions</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Metrics -->
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <div class="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-indigo-700">{{ overview.unique_students ?? 0 }}</p>
-                        <p class="text-xs text-indigo-500 mt-0.5">Students</p>
-                    </div>
-                    <div class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-blue-700">{{ overview.unique_courses ?? 0 }}</p>
-                        <p class="text-xs text-blue-500 mt-0.5">Courses</p>
-                    </div>
-                    <div class="rounded-xl border border-purple-100 bg-purple-50 px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-purple-700">{{ overview.unique_departments ?? 0 }}</p>
-                        <p class="text-xs text-purple-500 mt-0.5">Departments</p>
-                    </div>
-                    <div class="rounded-xl border border-green-100 bg-green-50 px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-green-700">{{ overview.courses_with_results ?? 0 }}</p>
-                        <p class="text-xs text-green-500 mt-0.5">With Results</p>
-                    </div>
-                    <div class="rounded-xl border border-yellow-100 bg-yellow-50 px-4 py-4 text-center">
-                        <p class="text-2xl font-black text-yellow-700">{{ overview.courses_pending ?? 0 }}</p>
-                        <p class="text-xs text-yellow-500 mt-0.5">Pending</p>
-                    </div>
-                    <div class="rounded-xl border border-gray-200 bg-white px-4 py-4 text-center">
-                        <p class="text-2xl font-black" :class="ratingColor(systemAvg.overall ?? 0)">
-                            {{ systemAvg.overall ?? '—' }}
-                        </p>
-                        <p class="text-xs text-gray-400 mt-0.5">Avg /5</p>
-                    </div>
+                    <MetricCard label="Students" :value="overview.unique_students" :icon="UserGroupIcon" tone="indigo" />
+                    <MetricCard label="Courses" :value="overview.unique_courses" :icon="BookOpenIcon" tone="blue" />
+                    <MetricCard label="Departments" :value="overview.unique_departments" :icon="BuildingOffice2Icon" tone="violet" />
+                    <MetricCard label="With results" :value="overview.courses_with_results" :icon="CheckCircleIcon" tone="emerald" />
+                    <MetricCard label="Pending" :value="overview.courses_pending" :icon="ClockIcon" tone="amber" />
+                    <MetricCard label="Average /5" :value="systemAvg.overall ?? '—'" :icon="StarIcon" tone="orange" />
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

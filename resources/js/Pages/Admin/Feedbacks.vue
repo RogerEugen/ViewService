@@ -3,6 +3,8 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import MetricCard from '@/Components/MetricCard.vue';
+import { InboxIcon, PaperAirplaneIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     feedbacks: { type: Array,  default: () => [] },
@@ -66,26 +68,11 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString() : '—';
 
             <!-- Stats -->
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                <div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
-                    <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
-                    <p class="text-xs text-gray-400">Total</p>
-                </div>
-                <div class="rounded-xl border border-blue-100 bg-blue-50 p-4 text-center">
-                    <p class="text-2xl font-bold text-blue-700">{{ stats.submitted }}</p>
-                    <p class="text-xs text-blue-500">New</p>
-                </div>
-                <div class="rounded-xl border border-yellow-100 bg-yellow-50 p-4 text-center">
-                    <p class="text-2xl font-bold text-yellow-700">{{ stats.under_review }}</p>
-                    <p class="text-xs text-yellow-500">In Review</p>
-                </div>
-                <div class="rounded-xl border border-green-100 bg-green-50 p-4 text-center">
-                    <p class="text-2xl font-bold text-green-700">{{ stats.resolved }}</p>
-                    <p class="text-xs text-green-500">Resolved</p>
-                </div>
-                <div class="rounded-xl border border-red-100 bg-red-50 p-4 text-center">
-                    <p class="text-2xl font-bold text-red-700">{{ stats.urgent }}</p>
-                    <p class="text-xs text-red-500">Urgent</p>
-                </div>
+                <MetricCard label="Total feedback" :value="stats.total" :icon="InboxIcon" tone="blue" />
+                <MetricCard label="New submissions" :value="stats.submitted" :icon="PaperAirplaneIcon" tone="indigo" />
+                <MetricCard label="In review" :value="stats.under_review" :icon="ClockIcon" tone="amber" />
+                <MetricCard label="Resolved" :value="stats.resolved" :icon="CheckCircleIcon" tone="emerald" />
+                <MetricCard label="Urgent" :value="stats.urgent" :icon="ExclamationTriangleIcon" tone="rose" />
             </div>
 
             <!-- Search + filter -->

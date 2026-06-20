@@ -485,12 +485,18 @@ class AdminController extends Controller
     public function toggleEvaluationWindow(int $id): RedirectResponse
     {
         try {
-            Http::timeout(10)->post($this->feedbackApiUrl("evaluation-windows/{$id}/toggle"));
+            $response = Http::timeout(10)->post($this->feedbackApiUrl("evaluation-windows/{$id}/toggle"));
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Service unavailable.']);
         }
 
-        return back()->with('success', 'Window status updated.');
+        if (!$response->successful()) {
+            return back()->withErrors([
+                'error' => $response->json('message', 'Window status could not be updated.'),
+            ]);
+        }
+
+        return back()->with('success', $response->json('message', 'Window status updated.'));
     }
 
     public function deleteEvaluationWindow(int $id): RedirectResponse
