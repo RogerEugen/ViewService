@@ -36,7 +36,7 @@ class CommunicationController extends Controller
             }
         }
 
-        $roomMeta = [];
+        $roomMeta = collect();
         try {
             $overviewResponse = $this->client()->post(
                 rtrim(config('services.feedback_service.url'), '/').'/api/communications/overview',
